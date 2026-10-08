@@ -296,4 +296,18 @@ describe("<ChangeRecoveryKeyBody />", () => {
             expect(onFinish).toHaveBeenCalledWith();
         });
     });
+
+    it("should go straight to the new key when skipping the introduction", async () => {
+        render(
+            <ChangeRecoveryKeyBody
+                userHasRecoveryKey={false}
+                skipIntroduction={true}
+                onFinish={vi.fn()}
+                onCancelClick={vi.fn()}
+            />,
+            withClientContextRenderOptions(matrixClient),
+        );
+        await waitFor(() => expect(screen.getByText("Save your recovery key somewhere safe")).toBeInTheDocument());
+        expect(screen.getByText("encoded private key")).toBeInTheDocument();
+    });
 });
