@@ -37,7 +37,6 @@
         "copy_link": "Copy link",
         "create": "Create",
         "create_a_room": "Create a room",
-        "create_account": "Create account",
         "decline": "Decline",
         "decline_and_block": "Decline and block",
         "decline_invite": "Decline invite",
@@ -640,6 +639,7 @@
         "send_button_voice_message": "Send voice message",
         "send_voice_message": "Send voice message",
         "stop_voice_message": "Stop recording",
+        "tesseract_owner_merge_target": "composer|tesseract_owner_merge_target",
         "voice_message_button": "Voice Message"
     },
     "console_dev_note": "If you know what you're doing, Element is open-source, be sure to check out our GitHub (https://github.com/vector-im/element-web/) and contribute!",

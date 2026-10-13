@@ -69,6 +69,7 @@ import { type RoomUploadViewModel, useRoomUploadViewModel } from "../../../viewm
 import { type MessageComposerUrlPreviewViewModel } from "../../../viewmodels/composer/MessageComposerUrlPreviewViewModel";
 import { linksIn } from "../../../utils/UrlUtils";
 import { type MessageComposerUrlPreviewSnapshot } from "@element-hq/web-shared-components";
+import { getTesseractComposerTargetRoomId } from "../../../tesseract/TesseractOwnerMerge";
 
 // The prefix used when persisting editor drafts to localstorage.
 export const EDITOR_STATE_STORAGE_PREFIX = "mx_cider_state_";
@@ -439,7 +440,7 @@ export class SendMessageComposer extends React.Component<ISendMessageComposerPro
         };
 
         if (shouldSend) {
-            const { roomId } = this.props.room;
+            const roomId = getTesseractComposerTargetRoomId(this.props.room, replyToEvent);
             if (!content) {
                 content = createMessageContent(
                     this.props.mxClient.getSafeUserId(),

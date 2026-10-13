@@ -64,6 +64,11 @@ import { MessageComposerUrlPreviewViewModel } from "../../../viewmodels/composer
 import { useScopedRoomContext } from "../../../contexts/ScopedRoomContext";
 import PlatformPeg from "../../../PlatformPeg";
 import { ModuleApi } from "../../../modules/Api";
+import { getTesseractAgentRegistry, type TesseractAgentDetails } from "../../../tesseract/TesseractAgentRegistry";
+import {
+    getTesseractMergedAgentRooms,
+    interleaveTesseractOwnerMergeEvents,
+} from "../../../tesseract/TesseractOwnerMerge";
 
 // The prefix used when persisting editor drafts to localstorage.
 export const WYSIWYG_EDITOR_STATE_STORAGE_PREFIX = "mx_wysiwyg_state_";
@@ -112,6 +117,7 @@ interface IState {
     isWysiwygLabEnabled: boolean;
     isRichTextEnabled: boolean;
     initialComposerContent: string;
+    tesseractAgentRegistry: Map<string, TesseractAgentDetails>;
 }
 
 type WysiwygComposerState = {
@@ -162,6 +168,7 @@ export class MessageComposer extends React.Component<IProps, IState> {
             isWysiwygLabEnabled: isWysiwygLabEnabled,
             isRichTextEnabled: isRichTextEnabled,
             initialComposerContent: initialComposerContent,
+            tesseractAgentRegistry: new Map<string, TesseractAgentDetails>(),
         };
 
         this.instanceId = instanceCount++;
@@ -256,6 +263,9 @@ export class MessageComposer extends React.Component<IProps, IState> {
         SettingsStore.monitorSetting("feature_wysiwyg_composer", null);
 
         this.dispatcherRef = dis.register(this.onAction);
+        void getTesseractAgentRegistry(this.props.mxClient).then((tesseractAgentRegistry) => {
+            this.setState({ tesseractAgentRegistry });
+        });
         this.waitForOwnMember();
         UIStore.instance.trackElementDimensions(`MessageComposer${this.instanceId}`, this.ref.current!);
         UIStore.instance.on(`MessageComposer${this.instanceId}`, this.onResize);
@@ -450,6 +460,23 @@ export class MessageComposer extends React.Component<IProps, IState> {
             isComposerEmpty: content?.length === 0,
         });
     };
+
+    private getTesseractFreshMessageTargetNotice(): string | undefined {
+        if (this.props.replyToEvent || this.state.tesseractAgentRegistry.size === 0) return undefined;
+
+        const mergedAgentRooms = getTesseractMergedAgentRooms(
+            this.props.mxClient,
+            this.props.room,
+            this.state.tesseractAgentRegistry,
+        );
+        if (mergedAgentRooms.length === 0) return undefined;
+
+        const ownerEvents = this.context.liveTimeline?.getEvents() ?? [];
+        const lastEvent = interleaveTesseractOwnerMergeEvents(ownerEvents, mergedAgentRooms).at(-1);
+        if (!lastEvent || lastEvent.getRoomId() === this.props.room.roomId) return undefined;
+
+        return _t("composer|tesseract_owner_merge_target");
+    }
 
     private onRichTextToggle = async (): Promise<void> => {
         const { richToPlain, plainToRich } = await getConversionFunctions();
@@ -686,6 +713,7 @@ export class MessageComposer extends React.Component<IProps, IState> {
         );
 
         const showSendButton = canSendMessages && (!this.state.isComposerEmpty || this.state.haveRecording);
+        const tesseractFreshMessageTargetNotice = this.getTesseractFreshMessageTargetNotice();
 
         const classes = classNames({
             "mx_MessageComposer": true,
@@ -703,6 +731,11 @@ export class MessageComposer extends React.Component<IProps, IState> {
                         replyToEvent={this.props.replyToEvent}
                         permalinkCreator={this.props.permalinkCreator}
                     />
+                    {tesseractFreshMessageTargetNotice && (
+                        <div className="mx_MessageComposer_tesseractOwnerMergeTarget">
+                            {tesseractFreshMessageTargetNotice}
+                        </div>
+                    )}
                     <div className="mx_MessageComposer_row">
                         {leftIcon}
                         {composer}

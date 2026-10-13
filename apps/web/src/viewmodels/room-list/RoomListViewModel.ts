@@ -48,6 +48,8 @@ import { tagRoom } from "../../utils/room/tagRoom";
 import { getSectionTagForRoom } from "../../utils/room/getSectionTagForRoom";
 import SettingsStore from "../../settings/SettingsStore";
 import { type RoomViewStore } from "../../stores/RoomViewStore.tsx";
+import { getTesseractAgentRegistry, type TesseractAgentDetails } from "../../tesseract/TesseractAgentRegistry";
+import { getTesseractMergedAgentRooms } from "../../tesseract/TesseractOwnerMerge";
 
 /**
  * Tracks the position of the active room within a specific section.
@@ -146,6 +148,7 @@ export class RoomListViewModel
      * This map stores the original expansion state of each section before the drag starts, so we can restore it after the drag ends.
      */
     private readonly savedExpansionStates = new Map<string, boolean>();
+    private tesseractAgentRegistry = new Map<string, TesseractAgentDetails>();
 
     /**
      * Reference to the currently displayed event toast's auto-close timer, used to dismiss it
@@ -229,6 +232,11 @@ export class RoomListViewModel
 
         // Build initial roomsMap from roomsResult
         this.updateRoomsMap(roomsResult);
+
+        void getTesseractAgentRegistry(props.client).then((tesseractAgentRegistry) => {
+            this.tesseractAgentRegistry = tesseractAgentRegistry;
+            void this.updateRoomListData();
+        });
 
         // Subscribe to room list updates
         this.disposables.trackListener(RoomListStoreV3.instance, RoomListStoreV3Event.ListsUpdate, this.onListsUpdate);
@@ -392,10 +400,14 @@ export class RoomListViewModel
             viewModel = new RoomListItemViewModel({
                 room,
                 client: this.props.client,
+                mergedNotificationRooms: this.getTesseractMergedNotificationRooms(room),
             });
 
             this.roomItemViewModels.set(roomId, viewModel);
         }
+
+        const room = this.roomsMap.get(roomId);
+        if (room) viewModel.setMergedNotificationRooms(this.getTesseractMergedNotificationRooms(room));
 
         // Return the view model - the view will call useViewModel() on it
         return viewModel;
@@ -877,6 +889,8 @@ export class RoomListViewModel
         }
 
         // Build the complete state atomically to ensure consistency
+        this.roomsResult = this.applyTesseractOwnerMerge(this.roomsResult);
+        this.updateRoomsMap(this.roomsResult);
         const { sections, isFlatList } = computeSections(
             this.roomsResult,
             (tag) => this.roomSectionHeaderViewModels.get(tag)?.isExpanded ?? true,
@@ -952,6 +966,30 @@ export class RoomListViewModel
             action: Action.RoomListSectionsCollapseStateChanged,
             collapseSections: allCollapsed ? "collapse" : "expand",
         });
+    }
+
+    private getTesseractMergedNotificationRooms(room: Room): Room[] {
+        return getTesseractMergedAgentRooms(this.props.client, room, this.tesseractAgentRegistry).map(({ room }) => room);
+    }
+
+    private applyTesseractOwnerMerge(roomsResult: RoomsResult): RoomsResult {
+        if (this.tesseractAgentRegistry.size === 0) return roomsResult;
+
+        const hiddenAgentRoomIds = new Set<string>();
+        for (const section of roomsResult.sections) {
+            for (const room of section.rooms) {
+                this.getTesseractMergedNotificationRooms(room).forEach((agentRoom) => hiddenAgentRoomIds.add(agentRoom.roomId));
+            }
+        }
+        if (hiddenAgentRoomIds.size === 0) return roomsResult;
+
+        return {
+            ...roomsResult,
+            sections: roomsResult.sections.map((section) => ({
+                ...section,
+                rooms: section.rooms.filter((room) => !hiddenAgentRoomIds.has(room.roomId)),
+            })),
+        };
     }
 
     public createChatRoom = (): void => {

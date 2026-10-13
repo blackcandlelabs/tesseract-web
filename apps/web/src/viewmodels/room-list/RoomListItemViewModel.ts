@@ -53,6 +53,7 @@ type Sections = Array<Omit<Section, "isSelected">>;
 interface RoomItemProps {
     room: Room;
     client: MatrixClient;
+    mergedNotificationRooms?: Room[];
 }
 
 /**
@@ -86,12 +87,16 @@ export class RoomListItemViewModel
     public constructor(props: RoomItemProps) {
         // Get notification state first so we can generate a complete initial snapshot
         const notifState = RoomNotificationStateStore.instance.getRoomState(props.room);
+        const mergedNotifStates = props.mergedNotificationRooms?.map((room) =>
+            RoomNotificationStateStore.instance.getRoomState(room),
+        );
         const availableSections = RoomListItemViewModel.computeAvailableSections();
         const initialItem = RoomListItemViewModel.generateItemSync(
             props.room,
             props.client,
             notifState,
             availableSections,
+            mergedNotifStates,
         );
         super(props, initialItem);
 
@@ -100,6 +105,9 @@ export class RoomListItemViewModel
 
         // Subscribe to notification state changes for this room
         this.disposables.trackListener(this.notifState, NotificationStateEvents.Update, this.onNotificationChanged);
+        mergedNotifStates?.forEach((state) => {
+            this.disposables.trackListener(state, NotificationStateEvents.Update, this.onNotificationChanged);
+        });
 
         // Subscribe to message preview changes for this specific room
         this.disposables.trackListener(
@@ -160,6 +168,20 @@ export class RoomListItemViewModel
 
             this.updateUserStatus();
         }
+    }
+
+    public setMergedNotificationRooms(mergedNotificationRooms: Room[]): void {
+        const previousRoomIds = new Set(this.props.mergedNotificationRooms?.map((room) => room.roomId));
+        this.props.mergedNotificationRooms = mergedNotificationRooms;
+        for (const room of mergedNotificationRooms) {
+            if (previousRoomIds.has(room.roomId)) continue;
+            this.disposables.trackListener(
+                RoomNotificationStateStore.instance.getRoomState(room),
+                NotificationStateEvents.Update,
+                this.onNotificationChanged,
+            );
+        }
+        this.updateItem();
     }
 
     public dispose(): void {
@@ -249,6 +271,7 @@ export class RoomListItemViewModel
             this.props.client,
             this.notifState,
             this.availableSections,
+            this.props.mergedNotificationRooms?.map((room) => RoomNotificationStateStore.instance.getRoomState(room)),
         );
         this.snapshot.merge({
             ...newItem,
@@ -322,6 +345,7 @@ export class RoomListItemViewModel
         client: MatrixClient,
         notifState: RoomNotificationState,
         availableSections: Sections,
+        mergedNotifStates: RoomNotificationState[] = [],
     ): RoomListItemViewSnapshot {
         // Get room tags for menu state
         const roomTags = room.tags;
@@ -339,7 +363,9 @@ export class RoomListItemViewModel
         const showNotificationMenu = hasAccessToNotificationMenu(room, client.isGuest(), isArchived);
 
         // Notification levels
-        const canMarkAsRead = notifState.level > NotificationLevel.None;
+        const canMarkAsRead =
+            notifState.level > NotificationLevel.None ||
+            mergedNotifStates.some((mergedNotifState) => mergedNotifState.level > NotificationLevel.None);
         const canMarkAsUnread = !canMarkAsRead && !isArchived;
 
         const canInvite = room.canInvite(client.getUserId()!) && !isDm && shouldShowComponent(UIComponent.InviteUsers);
@@ -392,14 +418,25 @@ export class RoomListItemViewModel
             isBold: notifState.hasAnyNotificationOrActivity,
             messagePreview,
             notification: {
-                hasAnyNotificationOrActivity: notifState.hasAnyNotificationOrActivity || hasParticipantsInCall,
-                isUnsentMessage: notifState.isUnsentMessage,
+                hasAnyNotificationOrActivity:
+                    notifState.hasAnyNotificationOrActivity ||
+                    mergedNotifStates.some((mergedNotifState) => mergedNotifState.hasAnyNotificationOrActivity) ||
+                    hasParticipantsInCall,
+                isUnsentMessage:
+                    notifState.isUnsentMessage ||
+                    mergedNotifStates.some((mergedNotifState) => mergedNotifState.isUnsentMessage),
                 invited: notifState.invited,
-                isMention: notifState.isMention,
-                isActivityNotification: notifState.isActivityNotification,
-                isNotification: notifState.isNotification,
-                hasUnreadCount: notifState.hasUnreadCount,
-                count: notifState.count,
+                isMention: notifState.isMention || mergedNotifStates.some((mergedNotifState) => mergedNotifState.isMention),
+                isActivityNotification:
+                    notifState.isActivityNotification ||
+                    mergedNotifStates.some((mergedNotifState) => mergedNotifState.isActivityNotification),
+                isNotification:
+                    notifState.isNotification ||
+                    mergedNotifStates.some((mergedNotifState) => mergedNotifState.isNotification),
+                hasUnreadCount:
+                    notifState.hasUnreadCount ||
+                    mergedNotifStates.some((mergedNotifState) => mergedNotifState.hasUnreadCount),
+                count: notifState.count + mergedNotifStates.reduce((total, state) => total + state.count, 0),
                 muted: isNotificationMute,
                 callType: hasParticipantsInCall ? callType : undefined,
             },
