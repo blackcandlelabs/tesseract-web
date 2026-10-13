@@ -53,6 +53,10 @@ import SettingsStore from "../../../settings/SettingsStore";
 import { RoomPermalinkCreator } from "../../../utils/permalinks/Permalinks";
 import PlatformPeg from "../../../PlatformPeg";
 import { EventPresentationContextProvider } from "../../../utils/EventPresentationContextProvider.tsx";
+import {
+    clearTesseractAgentRegistryCache,
+    TESSERACT_AGENT_FIELD,
+} from "../../../tesseract/TesseractAgentRegistry";
 
 function getTile(container: HTMLElement): HTMLElement {
     const tile = container.querySelector(".mx_EventTile");
@@ -223,6 +227,13 @@ describe("EventTile", () => {
 
         vi.spyOn(client, "getRoom").mockReturnValue(room);
         vi.spyOn(client, "decryptEventIfNeeded").mockResolvedValue();
+        vi.spyOn(client, "getHomeserverUrl").mockReturnValue("https://matrix.example.org");
+        vi.spyOn(client, "getAccessToken").mockReturnValue("access-token");
+        clearTesseractAgentRegistryCache();
+        vi.stubGlobal(
+            "fetch",
+            vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ agents: [] }) }),
+        );
         vi.spyOn(SettingsStore, "getValue").mockReturnValue(false);
 
         mxEvent = mkMessage({
@@ -234,6 +245,8 @@ describe("EventTile", () => {
     });
 
     afterEach(() => {
+        vi.unstubAllGlobals();
+        clearTesseractAgentRegistryCache();
         vi.restoreAllMocks();
     });
 
@@ -285,6 +298,61 @@ describe("EventTile", () => {
             const { container } = getComponent({ eventSendStatus: null as unknown as EventStatus });
 
             expect(getTile(container)).not.toHaveAttribute("aria-live");
+        });
+    });
+
+    describe("Tesseract agent notice", () => {
+        function setAgentField(event: MatrixEvent, content: Record<string, unknown>): void {
+            event.getContent()[TESSERACT_AGENT_FIELD] = content;
+        }
+
+        function mockRegistry(agents: Array<Record<string, unknown>>): void {
+            vi.mocked(fetch).mockResolvedValue({
+                ok: true,
+                json: vi.fn().mockResolvedValue({ agents }),
+            } as unknown as Response);
+        }
+
+        it("does not render for a human message carrying a copied agent field", async () => {
+            setAgentField(mxEvent, { agent_id: "@human:example.org", api_key_name: "Copied key" });
+
+            getComponent();
+            await waitFor(() => expect(fetch).toHaveBeenCalled());
+
+            expect(screen.queryByText("(!) Copied key sent this message")).not.toBeInTheDocument();
+        });
+
+        it("renders without an audit link when an agent message has the field deleted", () => {
+            mxEvent = makeTimestampedMessage({ user: "@assistant.agent:example.org" });
+
+            getComponent();
+
+            expect(screen.getByText("(!) @assistant.agent:example.org sent this message")).toBeInTheDocument();
+            expect(screen.queryByRole("button", { name: "(!) @assistant.agent:example.org sent this message" })).toBeNull();
+        });
+
+        it("renders but hides the audit link when the key name mismatches the registry", async () => {
+            mockRegistry([{ mxid: "@assistant.agent:example.org", api_key_name: "Real key" }]);
+            mxEvent = makeTimestampedMessage({ user: "@assistant.agent:example.org" });
+            setAgentField(mxEvent, {
+                agent_id: "@assistant.agent:example.org",
+                audit_id: "forged-audit-id",
+                api_key_name: "Forged key",
+            });
+
+            getComponent();
+
+            await waitFor(() => expect(screen.getByText(/sent this message$/)).toHaveTextContent("(!) Real key sent this message"));
+            expect(screen.queryByRole("button", { name: /sent this message$/ })).toBeNull();
+        });
+
+        it("renders for a registry-only agent without the .agent suffix", async () => {
+            mockRegistry([{ mxid: "@integration:example.org", api_key_name: "Registry key" }]);
+            mxEvent = makeTimestampedMessage({ user: "@integration:example.org" });
+
+            getComponent();
+
+            expect(await screen.findByText("(!) Registry key sent this message")).toBeInTheDocument();
         });
     });
 

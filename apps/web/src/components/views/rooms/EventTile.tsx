@@ -114,6 +114,12 @@ import { EventTileE2eViewModel } from "../../../viewmodels/room/timeline/event-t
 import { shouldHighlightEventTile } from "../../../viewmodels/room/timeline/event-tile/EventTileHighlightState";
 import { shouldHideEventTile } from "../../../viewmodels/room/timeline/event-tile/EventTileVisibilityState";
 import { UnreadNotificationBadgeViewModel } from "../../../viewmodels/room/notification-badge/UnreadNotificationBadgeViewModel";
+import {
+    getTesseractAgentBannerFacts,
+    getTesseractAgentRegistry,
+    type TesseractAgentBannerFacts,
+} from "../../../tesseract/TesseractAgentRegistry";
+import { TesseractAgentNotice } from "./TesseractAgentNotice";
 
 /** Relation lookup type retained for EventTile consumers. */
 export type { GetRelationsForEvent } from "../../../viewmodels/room/timeline/event-tile/reactions/EventTileReactionState";
@@ -284,6 +290,8 @@ interface IState {
     isQuoteExpanded?: boolean;
 
     thread: Thread | null;
+
+    tesseractAgentFacts?: TesseractAgentBannerFacts;
 }
 
 interface EventTileRenderInputs {
@@ -333,6 +341,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             reactions: this.getReactions(),
 
             thread,
+            tesseractAgentFacts: getTesseractAgentBannerFacts(this.props.mxEvent, new Map()),
         };
 
         this.viewModel = new EventTileViewModel(this.createViewModelDependencies(), this.createViewModelProps());
@@ -409,6 +418,8 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
 
         const room = client.getRoom(this.props.mxEvent.getRoomId());
         room?.on(ThreadEvent.New, this.onNewThread);
+
+        void this.updateTesseractAgentFacts();
     }
 
     private readonly updateThread = (thread: Thread): void => {
@@ -448,9 +459,14 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         if (this.props.resizeObserver && this.ref.current) this.props.resizeObserver.unobserve(this.ref.current);
     }
 
-    public componentDidUpdate(_prevProps: Readonly<EventTileProps>, prevState: Readonly<IState>): void {
+    public componentDidUpdate(prevProps: Readonly<EventTileProps>, prevState: Readonly<IState>): void {
         // Some overlays, such as portalled tooltips, can interrupt the normal mouseleave path.
         // While hover is active, verify it against the browser's real :hover state on mouse movement.
+        if (prevProps.mxEvent !== this.props.mxEvent) {
+            this.setState({ tesseractAgentFacts: getTesseractAgentBannerFacts(this.props.mxEvent, new Map()) });
+            void this.updateTesseractAgentFacts();
+        }
+
         if (!prevState.interaction.hover && this.state.interaction.hover) {
             this.startStaleHoverCheck();
         } else if (prevState.interaction.hover && !this.state.interaction.hover) {
@@ -484,6 +500,11 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                 interaction: eventTileBlurWithin(prevState.interaction),
             }));
         }
+    }
+
+    private async updateTesseractAgentFacts(): Promise<void> {
+        const registry = await getTesseractAgentRegistry(MatrixClientPeg.safeGet());
+        this.setState({ tesseractAgentFacts: getTesseractAgentBannerFacts(this.props.mxEvent, registry) });
     }
 
     private readonly onNewThread = (thread: Thread): void => {
@@ -1094,6 +1115,15 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                 />
             ) : undefined;
 
+        // Tesseract agent notice slot.
+        const tesseractAgentNotice = this.state.tesseractAgentFacts ? (
+            <TesseractAgentNotice
+                client={MatrixClientPeg.safeGet()}
+                mxEvent={this.props.mxEvent}
+                facts={this.state.tesseractAgentFacts}
+            />
+        ) : undefined;
+
         // Reply slots.
         const replyChain = eventTileSnapshot.root.state.hasReply ? (
             <ReplyChain
@@ -1197,6 +1227,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                     body,
                     timestamp: timestampSlot,
                     padlock,
+                    agentNotice: tesseractAgentNotice,
                     replyChain,
                     actionBar,
                     footer,

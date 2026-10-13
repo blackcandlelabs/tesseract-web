@@ -50,6 +50,46 @@ $left-gutter: 64px;
         overflow: visible;
     }
 
+    .mx_TesseractAgentNotice {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--cpd-space-1x);
+        margin-block-end: var(--cpd-space-1x);
+        padding: var(--cpd-space-1x) var(--cpd-space-2x);
+        border: 1px solid var(--cpd-color-orange-700);
+        border-inline-start: 4px solid var(--cpd-color-orange-900);
+        border-radius: var(--cpd-radius-pill-effect);
+        background: var(--cpd-color-orange-100);
+        color: var(--cpd-color-orange-1400);
+        font: var(--cpd-font-body-sm-regular);
+    }
+
+    .mx_TesseractAgentNotice_button {
+        appearance: none;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: start;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .mx_TesseractAgentNotice_detail {
+        max-width: 480px;
+        padding: var(--cpd-space-2x);
+        border-radius: var(--cpd-radius-pill-effect);
+        background: var(--cpd-color-bg-canvas-default);
+        color: var(--cpd-color-text-primary);
+        box-shadow: var(--cpd-shadow-8);
+
+        pre {
+            white-space: pre-wrap;
+        }
+    }
+
     .mx_EventTile_searchHighlight {
         background-color: $accent;
         color: $accent-fg-color;

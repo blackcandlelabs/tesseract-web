@@ -48,6 +48,7 @@ export function EventTileView({
 
         const slotConfig: Record<EventTileSlotName, { style: string; className: keyof EventTileViewClassNames }> = {
             avatar: { style: styles.slotAvatar, className: "slotAvatar" },
+            agentNotice: { style: styles.slotAgentNotice, className: "slotAgentNotice" },
             sender: { style: styles.slotSender, className: "slotSender" },
             body: { style: styles.slotBody, className: "slotBody" },
             timestamp: { style: styles.slotTimestamp, className: "slotTimestamp" },
@@ -150,7 +151,7 @@ export function EventTileView({
                     {renderSlots("avatar", "sender")}
                 </div>
                 <div id={root.id} data-testid="event-tile-line" className={lineClassName} onContextMenu={onContextMenu}>
-                    {renderSlots("contextMenu", "replyChain", "body", "actionBar", "timestamp", "receipt")}
+                    {renderSlots("contextMenu", "agentNotice", "replyChain", "body", "actionBar", "timestamp", "receipt")}
                 </div>
                 {renderSlot("footer")}
             </>,
@@ -167,7 +168,7 @@ export function EventTileView({
                 </div>
                 {slots.roomAvatar ? renderSlot("roomAvatar") : renderSlot("avatar")}
                 <div id={root.id} data-testid="event-tile-line" className={lineClassName}>
-                    {renderSlots("body", "threadInfo")}
+                    {renderSlots("agentNotice", "body", "threadInfo")}
                 </div>
                 {renderSlot("receipt")}
             </>,
@@ -185,7 +186,7 @@ export function EventTileView({
                 </div>
                 {renderSlot("avatar")}
                 <div id={root.id} data-testid="event-tile-line" className={lineClassName}>
-                    {renderSlots("body", "threadInfo")}
+                    {renderSlots("agentNotice", "body", "threadInfo")}
                 </div>
                 {renderSlot("actionBar")}
                 {renderSlot("receipt")}
@@ -212,7 +213,7 @@ export function EventTileView({
                     </div>
                 </a>
                 <div id={root.id} data-testid="event-tile-line" className={lineClassName} onContextMenu={onContextMenu}>
-                    {renderSlots("contextMenu", "body")}
+                    {renderSlots("contextMenu", "agentNotice", "body")}
                 </div>
             </>,
             undefined,
@@ -227,7 +228,7 @@ export function EventTileView({
             <>
                 {renderSlots("timestamp", "padlock", "avatar", "sender")}
                 <div id={root.id} data-testid="event-tile-line" className={lineClassName} onContextMenu={onContextMenu}>
-                    {renderSlots("contextMenu", "replyChain", "body", "actionBar", "footer", "threadInfo")}
+                    {renderSlots("contextMenu", "agentNotice", "replyChain", "body", "actionBar", "footer", "threadInfo")}
                 </div>
                 {renderSlot("receipt")}
             </>,
@@ -241,7 +242,7 @@ export function EventTileView({
         <>
             {renderSlots("sender", "avatar")}
             <div id={root.id} data-testid="event-tile-line" className={lineClassName} onContextMenu={onContextMenu}>
-                {renderSlots("contextMenu", "timestamp", "padlock", "replyChain", "body", "actionBar")}
+                {renderSlots("contextMenu", "timestamp", "padlock", "agentNotice", "replyChain", "body", "actionBar")}
             </div>
             {renderSlots("footer", "threadInfo", "receipt")}
         </>,
