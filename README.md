@@ -1,3 +1,52 @@
+# Tesseract Web Client (Stage A)
+
+Stage A is Black Candle's class-1 rebrand/lockdown fork of Element Web.
+
+## Upstream pin
+
+- Upstream: `element-hq/element-web`
+- Release tag: `v1.12.30`
+- Upstream commit: `f19cfd9030429240a4209bf5175b372175cf0464`
+- Fork: `https://github.com/blackcandlelabs/element-web.git`
+- Branch: `tesseract`
+
+## Patch inventory
+
+1. `apps/web/config.sample.json`, `apps/web/element.io/app/config.json` — Black Candle homeserver defaults, Tesseract brand, dark amber custom theme, registration/password reset UI defaults disabled, Element-hosted links removed.
+2. `apps/web/res/vector-icons/tesseract.svg`, `apps/web/res/themes/tesseract/img/tesseract-logo.svg` — original Tesseract candle SVG mark.
+3. `apps/web/res/manifest.json`, `apps/web/src/vector/index.html` — Tesseract title, app metadata, favicon, dark theme color.
+4. `apps/web/src/SdkConfig.ts` — fallback defaults rebranded; Element help/download links removed.
+5. `apps/web/src/components/views/auth/AuthFooter.tsx` — default Element footer links removed.
+6. `apps/web/src/components/views/auth/AuthHeaderLogo.tsx` — default auth logo/alt text changed to Tesseract.
+7. `apps/web/src/components/views/auth/DefaultWelcome.tsx` — create-account affordance removed.
+8. `apps/web/src/components/structures/auth/Login.tsx` — password login and server picker hidden; MAS/OIDC action labelled `Sign in with Black Candle`.
+
+## Build
+
+```bash
+corepack pnpm install --frozen-lockfile
+corepack pnpm --filter element-web build
+```
+
+Sandbox verification for this branch: `cd apps/web && ../../node_modules/.bin/tsc --noEmit` passed. Full build was blocked in the sandbox because workspace postinstall rebuilds desktop `pkcs11js` and the sandbox lacks `make`; run the full build on the dev box.
+
+## Monthly rebase
+
+```bash
+git remote add upstream https://github.com/element-hq/element-web.git || true
+git fetch upstream --tags
+git checkout tesseract
+git checkout -b rebase/tesseract-vNEXT
+git rebase vNEXT_TAG
+corepack pnpm install --frozen-lockfile
+corepack pnpm --filter element-web lint:types
+corepack pnpm --filter element-web build
+```
+
+Keep the Stage A patch surface limited to config, theme/assets, and clearly delimited auth component edits.
+
+---
+
 [![Chat](https://img.shields.io/matrix/element-web:matrix.org?logo=matrix)](https://matrix.to/#/#element-web:matrix.org)
 ![Tests](https://github.com/element-hq/element-web/actions/workflows/tests.yaml/badge.svg)
 ![Static Analysis](https://github.com/element-hq/element-web/actions/workflows/static_analysis.yaml/badge.svg)
