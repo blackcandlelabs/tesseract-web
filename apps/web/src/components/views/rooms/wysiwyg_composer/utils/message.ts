@@ -36,6 +36,7 @@ import { Action } from "../../../../../dispatcher/actions";
 import { addReplyToMessageContent } from "../../../../../utils/Reply";
 import { attachRelation, attachUrlPreviews } from "../../../../../utils/messages";
 import { linksIn } from "../../../../../utils/UrlUtils";
+import { getTesseractComposerTargetRoomId } from "../../../../../tesseract/TesseractOwnerMerge";
 
 export interface SendMessageParams {
     mxClient: MatrixClient;
@@ -52,9 +53,9 @@ export async function sendMessage(
 ): Promise<ISendEventResponse | undefined> {
     const { relation, replyToEvent } = params;
     const { room } = roomContext;
-    const roomId = room?.roomId;
+    const roomId = room ? getTesseractComposerTargetRoomId(room, replyToEvent) : undefined;
 
-    if (!roomId) {
+    if (!room || !roomId) {
         return;
     }
 

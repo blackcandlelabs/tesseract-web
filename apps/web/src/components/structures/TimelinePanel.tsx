@@ -59,6 +59,11 @@ import { type ViewRoomPayload } from "../../dispatcher/payloads/ViewRoomPayload"
 import { getKeyBindingsManager } from "../../KeyBindingsManager";
 import { KeyBindingAction } from "../../accessibility/KeyboardShortcuts";
 import { haveRendererForEvent } from "../../events/EventTileFactory";
+import { getTesseractAgentRegistry, type TesseractAgentDetails } from "../../tesseract/TesseractAgentRegistry";
+import {
+    getTesseractMergedAgentRooms,
+    interleaveTesseractOwnerMergeEvents,
+} from "../../tesseract/TesseractOwnerMerge";
 
 // These pagination sizes are higher than they may possibly need be
 // once https://github.com/matrix-org/matrix-spec-proposals/pull/3874 lands
@@ -253,6 +258,7 @@ class TimelinePanel extends React.Component<IProps, IState> {
     private callEventGroupers = new Map<string, LegacyCallEventGrouper>();
     private initialReadMarkerId: string | null = null;
     private syncImpliesForwardPaginating: boolean;
+    private tesseractAgentRegistry = new Map<string, TesseractAgentDetails>();
 
     public constructor(props: IProps, context: React.ContextType<typeof RoomContext>) {
         super(props, context);
@@ -314,6 +320,7 @@ class TimelinePanel extends React.Component<IProps, IState> {
         cli.on(ClientEvent.Sync, this.onSync);
 
         this.props.timelineSet.room?.on(ThreadEvent.Update, this.onThreadUpdate);
+        void this.initTesseractOwnerMerge();
 
         if (this.props.manageReadReceipts && this.props.enableReadReceiptsAndMarkersOnActivity) {
             void this.updateReadReceiptOnUserActivity();
@@ -1598,7 +1605,7 @@ class TimelinePanel extends React.Component<IProps, IState> {
 
     // get the list of events from the timeline window and the pending event list
     private getEvents(): Pick<IState, "events" | "liveEvents"> {
-        const events = this.timelineWindow!.getEvents();
+        const events = [...this.timelineWindow!.getEvents()];
 
         // We want the last event to be decrypted first
         const client = MatrixClientPeg.safeGet();
@@ -1638,10 +1645,19 @@ class TimelinePanel extends React.Component<IProps, IState> {
             );
         }
 
+        const mergedAgentRooms = this.props.timelineSet.room
+            ? getTesseractMergedAgentRooms(client, this.props.timelineSet.room, this.tesseractAgentRegistry)
+            : [];
+
         return {
-            events,
-            liveEvents,
+            events: interleaveTesseractOwnerMergeEvents(events, mergedAgentRooms),
+            liveEvents: interleaveTesseractOwnerMergeEvents(liveEvents, mergedAgentRooms),
         };
+    }
+
+    private async initTesseractOwnerMerge(): Promise<void> {
+        this.tesseractAgentRegistry = await getTesseractAgentRegistry(MatrixClientPeg.safeGet());
+        if (this.timelineWindow) this.reloadEvents();
     }
 
     private indexForEventId(evId: string | null): number | null {
