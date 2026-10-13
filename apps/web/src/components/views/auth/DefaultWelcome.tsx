@@ -65,9 +65,6 @@ const DefaultWelcome: React.FC<Props> = ({ serverConfig }) => {
                 <Button as="a" href="#/login" kind="primary" size="md">
                     {showQrButton ? _t("auth|sign_in_manually") : _t("action|sign_in")}
                 </Button>
-                <Button as="a" href="#/register" kind="secondary" size="md">
-                    {_t("action|create_account")}
-                </Button>
                 {showGuestFunctions && (
                     <Button as="a" href="#/directory" kind="tertiary" size="md">
                         {_t("action|explore_rooms")}

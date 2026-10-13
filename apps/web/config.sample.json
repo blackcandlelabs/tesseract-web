@@ -1,50 +1,80 @@
 {
     "default_server_config": {
         "m.homeserver": {
-            "base_url": "https://matrix-client.matrix.org",
-            "server_name": "matrix.org"
-        },
-        "m.identity_server": {
-            "base_url": "https://vector.im"
+            "base_url": "https://chat.internal.blackcandletech.com",
+            "server_name": "chat.internal.blackcandletech.com"
         }
     },
-    "disable_custom_urls": false,
-    "disable_guests": false,
+    "disable_custom_urls": true,
+    "disable_guests": true,
     "disable_login_language_selector": false,
-    "disable_3pid_login": false,
-    "force_verification": false,
-    "brand": "Element",
-    "integrations_ui_url": "https://scalar.vector.im/",
-    "integrations_rest_url": "https://scalar.vector.im/api",
-    "integrations_widgets_urls": [
-        "https://scalar.vector.im/_matrix/integrations/v1",
-        "https://scalar.vector.im/api",
-        "https://scalar-staging.vector.im/_matrix/integrations/v1",
-        "https://scalar-staging.vector.im/api"
-    ],
-    "default_widget_container_height": 280,
-    "default_country_code": "GB",
+    "disable_3pid_login": true,
+    "brand": "Tesseract",
+    "branding": {
+        "auth_header_logo_url": "themes/tesseract/img/tesseract-logo.svg",
+        "logo_link_url": "#",
+        "auth_footer_links": []
+    },
     "show_labs_settings": false,
-    "features": {},
-    "default_federate": true,
-    "default_theme": "light",
+    "default_theme": "custom-Tesseract Amber",
+    "setting_defaults": {
+        "breadcrumbs": true,
+        "UIFeature.registration": false,
+        "UIFeature.passwordReset": false,
+        "custom_themes": [
+            {
+                "name": "Tesseract Amber",
+                "is_dark": true,
+                "colors": {
+                    "accent-color": "#E8A33D",
+                    "primary-color": "#E8A33D",
+                    "links": "#F0B85A",
+                    "alert": "#FF6B6B",
+                    "timeline-background-color": "#0B0D10",
+                    "roomlist-background-color": "#111418",
+                    "sidebar-color": "#08090B",
+                    "roomlist-highlights-color": "#2A2114",
+                    "timeline-highlights-color": "#1A1410",
+                    "timeline-text-color": "#F4EFE7",
+                    "timeline-text-secondary-color": "#C8BDAE",
+                    "roomlist-separator-color": "#262B31",
+                    "background": "#0B0D10",
+                    "system": "#111418",
+                    "primary-content": "#F4EFE7",
+                    "secondary-content": "#C8BDAE",
+                    "tertiary-content": "#A99D8E",
+                    "quaternary-content": "#746D64",
+                    "quinary-content": "#1A1E24"
+                },
+                "compound": {
+                    "--cpd-color-bg-action-primary-rest": "#E8A33D",
+                    "--cpd-color-bg-action-primary-hovered": "#F0B85A",
+                    "--cpd-color-bg-action-primary-pressed": "#C88625",
+                    "--cpd-color-text-on-solid-primary": "#08090B",
+                    "--cpd-color-icon-primary": "#E8A33D",
+                    "--cpd-color-text-action-accent": "#F0B85A",
+                    "--cpd-color-bg-canvas-default": "#0B0D10",
+                    "--cpd-color-bg-subtle-primary": "#111418",
+                    "--cpd-color-bg-subtle-secondary": "#171B21"
+                }
+            }
+        ]
+    },
     "room_directory": {
-        "servers": ["matrix.org"]
+        "servers": [
+            "chat.internal.blackcandletech.com"
+        ]
     },
     "enable_presence_by_hs_url": {
-        "https://matrix.org": false,
-        "https://matrix-client.matrix.org": false
-    },
-    "setting_defaults": {
-        "breadcrumbs": true
+        "https://chat.internal.blackcandletech.com": false
     },
     "jitsi": {
-        "preferred_domain": "meet.element.io"
+        "preferred_domain": "meet.blackcandletech.com"
     },
     "element_call": {
-        "brand": "Element Call",
-        "disable": false,
+        "brand": "Tesseract Call",
+        "disable": true,
         "use_exclusively": false
     },
-    "map_style_url": "https://api.maptiler.com/maps/streets/style.json?key=fU3vlMsMn4Jb6dnEIFsx"
+    "map_style_url": ""
 }

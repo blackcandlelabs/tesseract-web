@@ -13,19 +13,18 @@ import { type DeepReadonly } from "shared-types";
 import { SnakedObject } from "./utils/SnakedObject";
 import { type IConfigOptions, type ConfigOptions } from "./IConfigOptions";
 import { isObject, objectClone } from "./utils/objects";
-import ElementDesktopLogoSvg from "../res/img/element-desktop-logo.svg";
 
 // see element-web config.md for docs, or the IConfigOptions interface for dev docs
 export const DEFAULTS = {
-    brand: "Element",
+    brand: "Tesseract",
     branding: {
-        logo_link_url: "https://element.io",
-        auth_header_logo_url: "themes/element/img/logos/element-logo.svg",
-        welcome_background_url: "themes/element/img/backgrounds/lake.jpg",
+        logo_link_url: "#",
+        auth_header_logo_url: "themes/tesseract/img/tesseract-logo.svg",
+        welcome_background_url: "themes/tesseract/img/tesseract-logo.svg",
     },
-    help_url: "https://element.io/help",
-    help_encryption_url: "https://element.io/help#encryption",
-    help_key_storage_url: "https://element.io/help#encryption5",
+    help_url: "",
+    help_encryption_url: "",
+    help_key_storage_url: "",
     integrations_ui_url: "https://scalar.vector.im/",
     integrations_rest_url: "https://scalar.vector.im/api",
     show_labs_settings: false,
@@ -33,10 +32,10 @@ export const DEFAULTS = {
     enable_client_well_known_lookups: true,
 
     jitsi: {
-        preferred_domain: "meet.element.io",
+        preferred_domain: "meet.blackcandletech.com",
     },
     element_call: {
-        brand: "Element Call",
+        brand: "Tesseract Call",
     },
 
     // @ts-ignore - we deliberately use the camelCase version here so we trigger
@@ -44,9 +43,9 @@ export const DEFAULTS = {
     // everyone's config which has the camelCase property because our default would
     // be preferred over their config.
     desktopBuilds: {
-        available: true,
-        logo: ElementDesktopLogoSvg,
-        url: "https://element.io/get-started",
+        available: false,
+        logo: "themes/tesseract/img/tesseract-logo.svg",
+        url: "#",
     },
 
     feedback: {
@@ -56,19 +55,11 @@ export const DEFAULTS = {
     },
 
     desktop_builds: {
-        available: true,
-        logo: "vector-icons/1024.png",
-        url: "https://element.io/download",
-        url_macos: "https://packages.element.io/desktop/install/macos/Element.dmg",
-        url_win64: "https://packages.element.io/desktop/install/win32/x64/Element%20Setup.exe",
-        url_win64arm: "https://packages.element.io/desktop/install/win32/arm64/Element%20Setup.exe",
-        url_linux: "https://element.io/download#linux",
+        available: false,
+        logo: "vector-icons/tesseract.svg",
+        url: "#",
     },
-    mobile_builds: {
-        ios: "https://apps.apple.com/app/vector/id1083446067",
-        android: "https://play.google.com/store/apps/details?id=im.vector.app",
-        fdroid: "https://f-droid.org/repository/browse/?fdid=im.vector.app",
-    },
+    mobile_builds: {},
 } satisfies ConfigOptions;
 
 export type { ConfigOptions };

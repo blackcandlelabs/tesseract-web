@@ -21,11 +21,9 @@ import PlatformPeg from "../../../PlatformPeg";
 import SettingsStore from "../../../settings/SettingsStore";
 import { UIFeature } from "../../../settings/UIFeature";
 import { type IMatrixClientCreds } from "../../../utils/createMatrixClient";
-import PasswordLogin from "../../views/auth/PasswordLogin";
 import InlineSpinner from "../../views/elements/InlineSpinner";
 import Spinner from "../../views/elements/Spinner";
 import SSOButtons from "../../views/elements/SSOButtons";
-import ServerPicker from "../../views/elements/ServerPicker";
 import AuthBody from "../../views/auth/AuthBody";
 import AuthHeader from "../../views/auth/AuthHeader";
 import AccessibleButton, { type ButtonEvent } from "../../views/elements/AccessibleButton";
@@ -115,7 +113,7 @@ class LoginComponent extends React.PureComponent<IProps, IState> {
         // map from login step type to a function which will render a control
         // letting you do that login type
         this.stepRendererMap = {
-            "m.login.password": this.renderPasswordStep,
+            // Password login is intentionally omitted in the Tesseract fork: Black Candle uses MAS/OIDC SSO only.
 
             // CAS and SSO are the same thing, modulo the url we link to
             "m.login.cas": () => this.renderSsoStep("cas"),
@@ -400,7 +398,7 @@ class LoginComponent extends React.PureComponent<IProps, IState> {
         if (!this.state.flows) return null;
 
         // this is the ideal order we want to show the flows in
-        const order = ["oauthNativeFlow", "m.login.password", "m.login.sso"];
+        const order = ["oauthNativeFlow", "m.login.sso"];
 
         const flows = filterBoolean(order.map((type) => this.state.flows?.find((flow) => flow.type === type)));
         return (
@@ -412,25 +410,6 @@ class LoginComponent extends React.PureComponent<IProps, IState> {
             </React.Fragment>
         );
     }
-
-    private renderPasswordStep = (): JSX.Element => {
-        return (
-            <PasswordLogin
-                onSubmit={this.onPasswordLogin}
-                username={this.state.username}
-                phoneCountry={this.state.phoneCountry}
-                phoneNumber={this.state.phoneNumber}
-                onUsernameChanged={this.onUsernameChanged}
-                onUsernameBlur={this.onUsernameBlur}
-                onPhoneCountryChanged={this.onPhoneCountryChanged}
-                onPhoneNumberChanged={this.onPhoneNumberChanged}
-                onForgotPasswordClick={this.props.onForgotPasswordClick}
-                loginIncorrect={this.state.loginIncorrect}
-                disableSubmit={this.isBusy()}
-                busy={this.props.isSyncing || this.state.busyLoggingIn}
-            />
-        );
-    };
 
     private renderOAuth2Step = (): React.ReactNode => {
         const flow = this.state.flows!.find((flow) => flow.type === "oauthNativeFlow")! as OAuthNativeFlow;
@@ -448,7 +427,7 @@ class LoginComponent extends React.PureComponent<IProps, IState> {
                     );
                 }}
             >
-                {_t("action|continue")}
+                Sign in with Black Candle
             </Button>
         );
     };
@@ -535,11 +514,6 @@ class LoginComponent extends React.PureComponent<IProps, IState> {
                     </h1>
                     {errorTextSection}
                     {serverDeadSection}
-                    <ServerPicker
-                        serverConfig={this.props.serverConfig}
-                        onServerConfigChange={this.props.onServerConfigChange}
-                        disabled={this.isBusy()}
-                    />
                     {this.renderLoginComponentForFlows()}
                     {this.props.children}
                     {footer}
