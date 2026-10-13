@@ -98,6 +98,7 @@ export interface EventTileViewClassNames {
     senderDetails?: string;
     senderDetailsLink?: string;
     slotActionBar?: string;
+    slotAgentNotice?: string;
     slotAvatar?: string;
     slotBody?: string;
     slotContextMenu?: string;
@@ -120,6 +121,8 @@ export interface EventTileViewSlots {
     sender?: React.ReactNode;
     /** Main event body. */
     body: React.ReactNode;
+    /** Tesseract agent notice rendered above an agent-authored body. */
+    agentNotice?: React.ReactNode;
     /** Timestamp rendered by the shell according to the current layout. */
     timestamp?: React.ReactNode;
     /** Padlock rendered by the shell according to the current layout. */

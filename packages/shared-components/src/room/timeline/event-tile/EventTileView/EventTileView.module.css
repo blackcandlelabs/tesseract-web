@@ -92,6 +92,7 @@
    may be a component, fragment, or multiple elements and does not need to
    forward layout props. */
 .slotActionBar,
+.slotAgentNotice,
 .slotAvatar,
 .slotBody,
 .slotContextMenu,
