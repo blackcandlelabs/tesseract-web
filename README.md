@@ -21,7 +21,9 @@ the single sign-in path is "Sign in with Black Candle".
 
 1. **Rebrand (Stage A)** — brand "Tesseract"; default homeserver pinned
    to `chat.internal.blackcandletech.com`; "Tesseract Amber" theme
-   (#E8A33D) and the candle mark; create-account, server-picker, and
+   (#E9A33D) and the tesseract mark (hypercube wireframe, offset-depth;
+   Figma "Tesseract — App Icon Candidates" candidate B, swapped in
+   2026.10 for web 2026.10.1); create-account, server-picker, and
    password-login UI removed; SSO button reads "Sign in with
    Black Candle".
 2. **Agent banner (Stage B)** — the client resolves the agent registry
