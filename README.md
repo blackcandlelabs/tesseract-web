@@ -34,6 +34,17 @@ the single sign-in path is "Sign in with Black Candle".
    the owner's conversation with the notice
    `(!) <API_KEY_NAME> sent this message`.
 
+4. **Black Candle theme (redesign preview)** — `apps/web/src/settings/Settings.tsx`
+   The ground-up redesign's foundation: a "Black Candle" custom theme
+   registered as the `custom_themes` default and selected as the
+   default `theme` (with `use_system_theme` off by default so new
+   installs land on it). Tokens are the Black Candle ID v2 set
+   (near-black surfaces, candle-amber accent #E9A33D, Inter body,
+   IBM Plex Mono) applied through both the legacy colour keys and
+   Compound token overrides. Design source of truth: the Figma file
+   "Tesseract - Ground-Up Redesign". Preview scope — per-screen
+   design build-out follows.
+
 Server-visible changes: none — the Tesseract server side runs upstream
 Synapse + MAS; the bridge and its API live in the `tesseract` repo.
 
