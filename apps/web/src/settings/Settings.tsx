@@ -955,18 +955,74 @@ export const SETTINGS: Settings = {
     },
     "theme": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
-        default: "light",
+        // Tesseract fork (redesign preview): default to the Black Candle theme.
+        default: "custom-Black Candle",
         controller: new ThemeController(),
     },
     "custom_themes": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
-        default: [],
+        // Tesseract fork (redesign preview): the Black Candle theme, built from the
+        // Black Candle ID v2 token set (dark-first; see the Figma file
+        // "Tesseract - Ground-Up Redesign"). Legacy colour keys cover the classic
+        // chrome; compound overrides carry the modern surfaces.
+        default: [
+            {
+                name: "Black Candle",
+                is_dark: true,
+                colors: {
+                    "accent": "#E9A33D",
+                    "accent-alt": "#F0B35C",
+                    "alert": "#E5534B",
+                    "primary-background": "#0A0A0D",
+                    "secondary-background": "#141419",
+                    "tertiary-background": "#1C1C22",
+                    "sidebar-background": "#141419",
+                    "roomlist-background": "#141419",
+                    "roomlist-text-color": "#F5F5F7",
+                    "roomlist-text-secondary-color": "#A1A1A6",
+                    "roomlist-highlights-color": "#1C1C22",
+                    "timeline-background": "#0A0A0D",
+                    "space-background": "#141419",
+                },
+                fonts: {
+                    faces: [],
+                    general: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    monospace: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+                },
+                compound: {
+                    "--cpd-color-bg-canvas-default": "#0A0A0D",
+                    "--cpd-color-bg-canvas-disabled": "#141419",
+                    "--cpd-color-bg-subtle-primary": "#141419",
+                    "--cpd-color-bg-subtle-secondary": "#1C1C22",
+                    "--cpd-color-bg-action-primary-rest": "#E9A33D",
+                    "--cpd-color-bg-action-primary-hovered": "#F0B35C",
+                    "--cpd-color-bg-action-primary-pressed": "#C9852A",
+                    "--cpd-color-bg-action-primary-disabled": "#3A3A42",
+                    "--cpd-color-text-primary": "#F5F5F7",
+                    "--cpd-color-text-secondary": "#A1A1A6",
+                    "--cpd-color-text-tertiary": "#6E6E73",
+                    "--cpd-color-text-placeholder": "#6E6E73",
+                    "--cpd-color-text-on-solid-primary": "#171209",
+                    "--cpd-color-text-action-accent": "#F0B35C",
+                    "--cpd-color-icon-primary": "#F5F5F7",
+                    "--cpd-color-icon-secondary": "#A1A1A6",
+                    "--cpd-color-icon-tertiary": "#6E6E73",
+                    "--cpd-color-icon-accent-tertiary": "#E9A33D",
+                    "--cpd-color-border-strong": "#3D3D47",
+                    "--cpd-color-border-interactive": "#2E2E36",
+                    "--cpd-color-text-critical": "#E5534B",
+                    "--cpd-color-text-success": "#57AB5A",
+                },
+            },
+        ],
         // Potential privacy leak via theme origin
         shouldExportToRageshake: false,
     },
     "use_system_theme": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS,
-        default: true,
+        // Tesseract fork (redesign preview): off by default so the Black Candle
+        // theme is what new installs see; users can re-enable in Appearance.
+        default: false,
         displayName: _td("settings|appearance|match_system_theme"),
     },
     "useBundledEmojiFont": {
