@@ -1,8 +1,8 @@
 <script>
-	let { placeholder = '', value = $bindable(''), ...props } = $props();
+	let { placeholder = '', value = $bindable(''), settings = false, ...props } = $props();
 </script>
 
-<div class="input-wrapper">
+<div class="input-wrapper" class:settings>
 	<input bind:value {placeholder} {...props} />
 </div>
 
@@ -27,6 +27,18 @@
 		font-size: var(--text-lg);
 	}
 	
+    .input-wrapper.settings {
+        background: var(--color-bg-white);
+        border-color: var(--color-border);
+    }
+
+    .settings input {
+        height: 46px;
+        padding: 14px;
+        font-size: 14px;
+        line-height: 20px;
+    }
+
 	input::placeholder {
 		color: var(--color-text-tertiary);
 	}

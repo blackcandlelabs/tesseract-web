@@ -1,4 +1,5 @@
 <script>
+    import { settingsPages } from '#lib/settings';
     import { wave2Pages } from '#lib/wave2';
 	import Button from '#lib/components/Button.svelte';
 	
@@ -39,6 +40,17 @@
 	</header>
 	
 	<div class="sections">
+        <section class="section">
+            <h2>Wave 3 — Settings</h2>
+            <p class="section-description">Account, encryption, notifications, calls, room and space settings</p>
+            <div class="grid">
+                {#each settingsPages as page}
+                    <a href={page.path} class="card">
+                        <div class="card-content"><h3>{page.name}</h3><span class="arrow">→</span></div>
+                    </a>
+                {/each}
+            </div>
+        </section>
         <section class="section">
             <h2>Wave 2 — Room Ecosystem</h2>
             <p class="section-description">Room details, people, threads, encryption, and message interactions</p>

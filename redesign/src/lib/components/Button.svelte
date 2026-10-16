@@ -1,8 +1,8 @@
 <script>
-	let { variant = 'primary', children, ...props } = $props();
+	let { variant = 'primary', compact = false, children, ...props } = $props();
 </script>
 
-<button class="button {variant}" {...props}>
+<button class="button {variant}" class:compact {...props}>
 	{@render children()}
 </button>
 
@@ -37,6 +37,20 @@
 		background: var(--color-border);
 	}
 	
+    .button.compact {
+        height: 36px;
+        padding: 0 var(--space-4);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        line-height: 20px;
+        white-space: nowrap;
+    }
+
+    .button.compact.secondary {
+        background: var(--color-bg-white);
+        border: 1px solid var(--color-border);
+    }
+
 	.button.ghost {
 		background: transparent;
 		color: var(--color-text-secondary);
