@@ -1,0 +1,6 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="44" height="24" viewBox="0 0 44 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Settings / Toggle / On">
+<path d="M0 8C0 3.58172 3.58172 0 8 0H36C40.4183 0 44 3.58172 44 8V16C44 20.4183 40.4183 24 36 24H8C3.58172 24 0 20.4183 0 16V8Z" fill="#2970D1"/>
+<circle id="Ellipse" cx="32" cy="12" r="8" fill="white"/>
+</g>
+</svg>
