@@ -24,7 +24,9 @@ jobs:
         working-directory: redesign
         run: |
           npm ci
+          npm run test:unit
           npm run build
+          npm run test:render
 
       - name: Package build
         working-directory: redesign

@@ -1,4 +1,5 @@
 <script>
+    import { wave2Pages } from '#lib/wave2';
 	import Button from '#lib/components/Button.svelte';
 	
 	const foundationPages = [
@@ -38,6 +39,17 @@
 	</header>
 	
 	<div class="sections">
+        <section class="section">
+            <h2>Wave 2 — Room Ecosystem</h2>
+            <p class="section-description">Room details, people, threads, encryption, and message interactions</p>
+            <div class="grid">
+                {#each wave2Pages as page}
+                    <a href={page.path} class="card">
+                        <div class="card-content"><h3>{page.name}</h3><span class="arrow">→</span></div>
+                    </a>
+                {/each}
+            </div>
+        </section>
 		<section class="section">
 			<h2>Wave 1 — Core Screens</h2>
 			<p class="section-description">Authentication flows and primary navigation</p>

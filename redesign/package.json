@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:unit": "node --experimental-strip-types --test src/lib/wave2.test.ts",
+    "test:render": "node --experimental-strip-types --test src/lib/wave2.render.test.ts"
   },
   "dependencies": {
     "@sveltejs/adapter-static": "^4.0.0",

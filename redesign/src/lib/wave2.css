@@ -1,0 +1,51 @@
+/*
+Copyright 2026 Black Candle Technologies
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE in the repository root for full details.
+*/
+.wave2 { color: var(--color-text-primary); }
+.wave2 h2 { font-size: var(--text-xl); font-weight: 600; }
+.wave2 h3 { font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--space-4); }
+.wave2 p { margin: var(--space-3) 0; }
+.wave2 section { margin-bottom: var(--space-6); }
+.wave2 .summary { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); text-align: center; padding: var(--space-4) 0 var(--space-6); }
+.wave2 .summary p { color: var(--color-text-secondary); font-size: var(--text-sm); }
+.wave2 .caption, .wave2 time { color: var(--color-text-secondary); font-size: var(--text-xs); }
+.wave2 time { margin-left: auto; white-space: nowrap; }
+.wave2 .matrix-id { display: block; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.wave2 .secure { color: var(--color-verified); }
+.wave2 .danger { color: var(--color-error); }
+.wave2 .rows { border-block: 1px solid var(--color-border-light); margin-bottom: var(--space-6); }
+.wave2 .rows a, .wave2 .rows button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: var(--space-4) 0; font-size: var(--text-sm); text-align: left; }
+.wave2 .rows a + a, .wave2 .rows button + button { border-top: 1px solid var(--color-border-light); }
+.wave2 .action, .wave2 .back { display: block; color: var(--color-primary); font-size: var(--text-sm); padding: var(--space-3) 0; }
+.wave2 .action.danger { color: var(--color-error); }
+.wave2 dl { display: grid; grid-template-columns: auto 1fr; gap: var(--space-3); font-size: var(--text-sm); }
+.wave2 dt { color: var(--color-text-secondary); }
+.wave2 dd { text-align: right; }
+.wave2 .callout { padding: var(--space-4); background: var(--color-bg-light-1); border: 1px solid var(--color-border-light); border-radius: var(--radius-md); font-size: var(--text-sm); }
+.wave2 .callout h3 { margin-bottom: var(--space-2); }
+.wave2 .search { display: block; font-size: var(--text-sm); }
+.wave2 input:not([type="checkbox"]), .wave2 textarea { display: block; width: 100%; margin-top: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-light-1); color: var(--color-text-primary); }
+.wave2 textarea { resize: vertical; min-height: 96px; }
+.wave2 :is(a, button, input, textarea):focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+.wave2 .member { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border-light); }
+.wave2 .grow { flex: 1; min-width: 0; }
+.wave2 .presence { display: inline-block; width: 7px; height: 7px; border-radius: var(--radius-full); background: var(--color-verified); margin-right: var(--space-2); }
+.wave2 .presence.away { background: var(--color-text-tertiary); }
+.wave2 .inline { display: flex; align-items: center; gap: var(--space-2); }
+.wave2 .thread-card { display: block; position: relative; padding: var(--space-4); margin: var(--space-4) 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: var(--text-sm); }
+.wave2 .thread-card > strong { display: block; margin-top: var(--space-3); }
+.wave2 .unread { display: inline-block; margin-top: var(--space-3); border-radius: var(--radius-full); background: var(--color-primary); color: var(--color-bg-white); font-size: var(--text-xs); padding: var(--space-1) var(--space-2); }
+.wave2 .thread-root { padding: var(--space-4) 0; border-bottom: 1px solid var(--color-border); font-size: var(--text-sm); }
+.wave2 .reply-count { color: var(--color-text-secondary); margin-top: var(--space-5); }
+.wave2 .reply { font-size: var(--text-sm); padding: var(--space-3) 0; }
+.wave2 .reply p { padding-left: var(--space-8); }
+.wave2 .thread-composer { padding-top: var(--space-5); margin-top: var(--space-6); border-top: 1px solid var(--color-border); font-size: var(--text-sm); }
+.wave2 .thread-composer .inline { justify-content: space-between; margin-top: var(--space-3); }
+.wave2 .file-row { display: flex; text-align: left; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-4) 0; border-bottom: 1px solid var(--color-border-light); font-size: var(--text-sm); }
+.wave2 .file-row .caption { display: block; margin-top: var(--space-1); }
+.wave2 .file-icon, .wave2 .encryption-mark { display: grid; place-items: center; border-radius: var(--radius-md); background: var(--color-bg-light-2); width: 40px; height: 48px; color: var(--color-primary); font-size: var(--text-xl); }
+.wave2 .encryption-mark { width: 64px; height: 64px; color: var(--color-encryption); font-size: 36px; }
+.wave2 input[role="switch"] { width: 36px; height: 20px; accent-color: var(--color-primary); cursor: pointer; }
