@@ -1,15 +1,25 @@
 <script>
 	import Button from '#lib/components/Button.svelte';
 	
-	const pages = [
-		{ name: 'Login', path: '/login', type: 'Desktop' },
-		{ name: 'Chat List', path: '/chat-list', type: 'Desktop' },
-		{ name: 'Conversation', path: '/conversation', type: 'Desktop' },
-		{ name: 'Settings / Profile', path: '/settings', type: 'Desktop' },
-		{ name: 'Call Pre-join', path: '/call-prejoin', type: 'Desktop' },
-		{ name: 'Call In-call', path: '/call-incall', type: 'Desktop' },
-		{ name: 'Mobile Chat List', path: '/mobile-chat-list', type: 'Mobile' },
-		{ name: 'Mobile Conversation', path: '/mobile-conversation', type: 'Mobile' }
+	const foundationPages = [
+		{ name: 'Login', path: '/login' },
+		{ name: 'Chat List', path: '/chat-list' },
+		{ name: 'Conversation', path: '/conversation' },
+		{ name: 'Settings / Profile', path: '/settings' },
+		{ name: 'Call Pre-join', path: '/call-prejoin' },
+		{ name: 'Call In-call', path: '/call-incall' },
+		{ name: 'Mobile Chat List', path: '/mobile-chat-list' },
+		{ name: 'Mobile Conversation', path: '/mobile-conversation' }
+	];
+	
+	const wave1Pages = [
+		{ name: 'Welcome', path: '/welcome' },
+		{ name: 'Login SSO Handoff', path: '/login-sso' },
+		{ name: 'Login QR', path: '/login-qr' },
+		{ name: 'Register', path: '/register' },
+		{ name: 'Forgot Password', path: '/forgot-password' },
+		{ name: 'Home', path: '/home' },
+		{ name: 'Room Shell', path: '/room-shell' }
 	];
 </script>
 
@@ -29,9 +39,10 @@
 	
 	<div class="sections">
 		<section class="section">
-			<h2>Desktop Screens</h2>
+			<h2>Wave 1 — Core Screens</h2>
+			<p class="section-description">Authentication flows and primary navigation</p>
 			<div class="grid">
-				{#each pages.filter(p => p.type === 'Desktop') as page}
+				{#each wave1Pages as page}
 					<a href={page.path} class="card">
 						<div class="card-content">
 							<h3>{page.name}</h3>
@@ -43,9 +54,10 @@
 		</section>
 		
 		<section class="section">
-			<h2>Mobile Screens</h2>
+			<h2>Foundation Screens</h2>
+			<p class="section-description">Original design pass — desktop and mobile layouts</p>
 			<div class="grid">
-				{#each pages.filter(p => p.type === 'Mobile') as page}
+				{#each foundationPages as page}
 					<a href={page.path} class="card">
 						<div class="card-content">
 							<h3>{page.name}</h3>
@@ -120,6 +132,12 @@
 		font-size: var(--text-xl);
 		font-weight: 600;
 		color: var(--color-text-primary);
+		margin-bottom: var(--space-2);
+	}
+	
+	.section-description {
+		font-size: var(--text-base);
+		color: var(--color-text-secondary);
 		margin-bottom: var(--space-6);
 	}
 	
