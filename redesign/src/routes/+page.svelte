@@ -1,4 +1,5 @@
 <script>
+    import { statePages } from '#lib/states';
     import { dialogPages } from '#lib/dialogs';
     import { settingsPages } from '#lib/settings';
     import { wave2Pages } from '#lib/wave2';
@@ -41,6 +42,17 @@
 	</header>
 	
 	<div class="sections">
+        <section class="section">
+            <h2>Wave 5 — States &amp; Calls</h2>
+            <p class="section-description">Context menus, Element Call, location, empty states and connection recovery</p>
+            <div class="grid">
+                {#each statePages as page}
+                    <a href={page.path} class="card">
+                        <div class="card-content"><h3>{page.name}</h3><span class="arrow">→</span></div>
+                    </a>
+                {/each}
+            </div>
+        </section>
         <section class="section">
             <h2>Wave 4 — Dialogs</h2>
             <p class="section-description">Private rooms, invitations, search, security, moderation and media</p>
