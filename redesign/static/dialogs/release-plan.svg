@@ -1,0 +1,13 @@
+<!--
+Copyright 2026 Black Candle Technologies
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE in the repository root for full details.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480">
+<rect width="960" height="480" fill="#edf2fa"/>
+<g font-family="sans-serif" fill="#1a1a1a"><text x="64" y="88" font-size="30" font-weight="600">Engineering · Release plan</text><text x="64" y="125" font-size="18" fill="#6b6b6b">Review together. Verify on every device. Deploy with confidence.</text></g>
+<path d="M260 270H700" stroke="#2970d1" stroke-width="3"/>
+<g fill="white" stroke="#d6dfea"><rect x="64" y="210" width="240" height="120" rx="12"/><rect x="360" y="210" width="240" height="120" rx="12"/><rect x="656" y="210" width="240" height="120" rx="12"/></g>
+<g font-family="sans-serif" font-size="24" fill="#2970d1" text-anchor="middle"><text x="184" y="280">01 · Review</text><text x="480" y="280">02 · Verify</text><text x="776" y="280">03 · Deploy</text></g>
+</svg>
