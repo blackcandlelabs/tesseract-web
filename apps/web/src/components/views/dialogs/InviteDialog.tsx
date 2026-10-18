@@ -390,6 +390,11 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         try {
             const cli = MatrixClientPeg.safeGet();
             const targets = this.convertFilter();
+            // Direct Matrix IDs must belong to Tesseract; leave third-party resolution unchanged.
+            if (targets.some(({ userId }) => userId.startsWith("@") && !/^@[^:]+:blackcandletech\.com$/.test(userId))) {
+                this.setState({ busy: false, errorText: _t("invite|error_dm") });
+                return;
+            }
             await startDmOnFirstMessage(cli, targets);
             this.props.onFinished(true);
         } catch (err) {

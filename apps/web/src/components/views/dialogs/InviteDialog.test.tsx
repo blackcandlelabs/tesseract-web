@@ -393,16 +393,29 @@ describe("InviteDialog", () => {
         expectNoPill(bobEmail);
     });
 
-    it("should start a DM if the profile is available", async () => {
+    it("should start a DM with a local user if the profile is available", async () => {
+        const localId = "@alice:blackcandletech.com";
+        mockClient.getProfileInfo.mockResolvedValue({ displayname: "Alice" });
         render(<InviteDialog kind={InviteKind.Dm} onFinished={vi.fn()} />);
-        await enterIntoSearchField(aliceId);
+        await enterIntoSearchField(localId);
         await userEvent.click(screen.getByRole("button", { name: "Go" }));
-        expect(startDmOnFirstMessage).toHaveBeenCalledWith(mockClient, [
-            new DirectoryMember({
-                user_id: aliceId,
-            }),
-        ]);
+        expect(startDmOnFirstMessage).toHaveBeenCalledWith(mockClient, [new DirectoryMember({ user_id: localId })]);
     });
+
+    it.each([aliceId, "@alice:blackcandletech.com.evil", "@alice:blackcandletech.com:8448"])(
+        "should reject a foreign DM target even with a profile: %s",
+        async (userId) => {
+            mockClient.getProfileInfo.mockResolvedValue({ displayname: "Alice" });
+            const onFinished = vi.fn();
+            render(<InviteDialog kind={InviteKind.Dm} onFinished={onFinished} />);
+            await enterIntoSearchField(userId);
+            await userEvent.click(screen.getByRole("button", { name: "Go" }));
+            expect(startDmOnFirstMessage).not.toHaveBeenCalled();
+            expect(onFinished).not.toHaveBeenCalled();
+            expect(screen.getByText("We couldn't create your DM.")).toBeInTheDocument();
+            expect(screen.getByRole("button", { name: "Go" })).not.toBeDisabled();
+        },
+    );
 
     it("should not allow pasting the same user multiple times", async () => {
         render(<InviteDialog kind={InviteKind.Invite} roomId={roomId} onFinished={vi.fn()} />);
@@ -528,12 +541,8 @@ describe("InviteDialog", () => {
             await sleep(100);
         });
 
-        it("should start the DM directly", () => {
-            expect(startDmOnFirstMessage).toHaveBeenCalledWith(mockClient, [
-                new DirectoryMember({
-                    user_id: carolId,
-                }),
-            ]);
+        it("should not start a DM with a foreign user", () => {
+            expect(startDmOnFirstMessage).not.toHaveBeenCalled();
         });
     });
 
