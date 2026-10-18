@@ -7,16 +7,8 @@ Please see LICENSE files in the repository root for full details.
 */
 
 import { type WebSearch as WebSearchEvent } from "@matrix-org/analytics-events/types/typescript/WebSearch";
-import { capitalize, sum } from "lodash";
-import {
-    type HierarchyRoom,
-    type IPublicRoomsChunkRoom,
-    JoinRule,
-    type MatrixClient,
-    type Room,
-    RoomMember,
-    RoomType,
-} from "matrix-js-sdk/src/matrix";
+import { sum } from "lodash";
+import { type HierarchyRoom, type MatrixClient, type Room, RoomMember } from "matrix-js-sdk/src/matrix";
 import { KnownMembership } from "matrix-js-sdk/src/types";
 import { normalize } from "matrix-js-sdk/src/utils";
 import React, {
@@ -29,11 +21,10 @@ import React, {
     useRef,
     useState,
 } from "react";
-import { copyPlainTextToClipboard, sanitizeHtml } from "@element-hq/element-web-shared-utils";
+import { copyPlainTextToClipboard } from "@element-hq/element-web-shared-utils";
 import {
     ChatIcon,
     RoomIcon,
-    SpaceIcon,
     UserProfileIcon,
     HomeIcon,
     GroupIcon,
@@ -55,7 +46,6 @@ import { type ViewRoomPayload } from "../../../../dispatcher/payloads/ViewRoomPa
 import { useDebouncedCallback } from "../../../../hooks/spotlight/useDebouncedCallback";
 import { useRecentSearches } from "../../../../hooks/spotlight/useRecentSearches";
 import { useProfileInfo } from "../../../../hooks/useProfileInfo";
-import { usePublicRoomDirectory } from "../../../../hooks/usePublicRoomDirectory";
 import { useSpaceResults } from "../../../../hooks/useSpaceResults";
 import { useUserDirectory } from "../../../../hooks/useUserDirectory";
 import { getKeyBindingsManager } from "../../../../KeyBindingsManager";
@@ -79,20 +69,16 @@ import { buildActivityScores, buildMemberScores, compareMembers } from "../../..
 import BaseAvatar from "../../avatars/BaseAvatar";
 import DecoratedRoomAvatar from "../../avatars/DecoratedRoomAvatar";
 import { SearchResultAvatar } from "../../avatars/SearchResultAvatar";
-import { NetworkDropdown } from "../../directory/NetworkDropdown";
-import AccessibleButton, { type ButtonEvent } from "../../elements/AccessibleButton";
+import AccessibleButton from "../../elements/AccessibleButton";
 import Spinner from "../../elements/Spinner";
 import { NotificationBadge } from "../../rooms/NotificationBadge/NotificationBadge";
 import BaseDialog from "../BaseDialog";
 import { Option } from "./Option";
-import { PublicRoomResultDetails } from "./PublicRoomResultDetails";
 import { RoomResultContextMenus } from "./RoomResultContextMenus";
 import { RoomContextDetails } from "../../rooms/RoomContextDetails";
 import { TooltipOption } from "./TooltipOption";
 import { isLocalRoom } from "../../../../utils/localRoom/isLocalRoom";
-import RoomAvatar from "../../avatars/RoomAvatar";
 import { useFeatureEnabled } from "../../../../hooks/useSettings";
-import { filterBoolean } from "../../../../utils/arrays";
 import { transformSearchTerm } from "../../../../utils/SearchInput";
 import { Filter } from "./Filter";
 
@@ -110,31 +96,17 @@ function nodeIsForRecentlyViewed(node?: HTMLElement): boolean {
     return node?.id?.startsWith("mx_SpotlightDialog_button_recentlyViewed_") === true;
 }
 
-function getRoomTypes(filter: Filter | null): Set<RoomType | null> {
-    const roomTypes = new Set<RoomType | null>();
-
-    if (filter === Filter.PublicRooms) roomTypes.add(null);
-    if (filter === Filter.PublicSpaces) roomTypes.add(RoomType.Space);
-
-    return roomTypes;
-}
-
 enum Section {
     People,
     Rooms,
     Spaces,
     Suggestions,
-    PublicRoomsAndSpaces,
 }
 
 function filterToLabel(filter: Filter): string {
     switch (filter) {
         case Filter.People:
             return _t("common|people");
-        case Filter.PublicRooms:
-            return _t("spotlight_dialog|public_rooms_label");
-        case Filter.PublicSpaces:
-            return _t("spotlight_dialog|public_spaces_label");
     }
 }
 
@@ -142,10 +114,6 @@ function filterToIcon(filter: Filter): JSX.Element {
     switch (filter) {
         case Filter.People:
             return <UserProfileIcon />;
-        case Filter.PublicRooms:
-            return <RoomIcon />;
-        case Filter.PublicSpaces:
-            return <SpaceIcon />;
     }
 }
 
@@ -162,10 +130,6 @@ interface IBaseResult {
     section: Section;
     filter: Filter[];
     query?: string[]; // extra fields to query match, stored as lowercase
-}
-
-interface IPublicRoomResult extends IBaseResult {
-    publicRoom: IPublicRoomsChunkRoom;
 }
 
 interface IRoomResult extends IBaseResult {
@@ -187,24 +151,10 @@ interface IResult extends IBaseResult {
     onClick?(this: void): void;
 }
 
-type Result = IRoomResult | IPublicRoomResult | IMemberResult | IResult;
+type Result = IRoomResult | IMemberResult | IResult;
 
 const isRoomResult = (result: any): result is IRoomResult => !!result?.room;
-const isPublicRoomResult = (result: any): result is IPublicRoomResult => !!result?.publicRoom;
 const isMemberResult = (result: any): result is IMemberResult => !!result?.member;
-
-const toPublicRoomResult = (publicRoom: IPublicRoomsChunkRoom): IPublicRoomResult => ({
-    publicRoom,
-    section: Section.PublicRoomsAndSpaces,
-    filter: [Filter.PublicRooms, Filter.PublicSpaces],
-    query: filterBoolean([
-        publicRoom.room_id.toLowerCase(),
-        publicRoom.canonical_alias?.toLowerCase(),
-        publicRoom.name?.toLowerCase(),
-        sanitizeHtml(publicRoom.topic?.toLowerCase() ?? "", { allowedTags: [] }),
-        ...(publicRoom.aliases?.map((it) => it.toLowerCase()) || []),
-    ]),
-});
 
 const toRoomResult = (room: Room): IRoomResult => {
     const myUserId = MatrixClientPeg.safeGet().getUserId();
@@ -307,10 +257,6 @@ const roomAriaUnreadLabel = (room: Room, notification: RoomNotificationState): s
     }
 };
 
-const canAskToJoin = (joinRule?: JoinRule): boolean => {
-    return SettingsStore.getValue("feature_ask_to_join") && JoinRule.Knock === joinRule;
-};
-
 interface IDirectoryOpts {
     limit: number;
     query: string;
@@ -340,46 +286,26 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
     const [inviteLinkCopied, setInviteLinkCopied] = useState<boolean>(false);
     const trimmedQuery = useMemo(() => query.trim(), [query]);
 
-    const [supportsSpaceFiltering, setSupportsSpaceFiltering] = useState(true); // assume it does until we find out it doesn't
-    useEffect(() => {
-        void cli
-            .isVersionSupported("v1.4")
-            .then((supported) => {
-                return supported || cli.doesServerSupportUnstableFeature("org.matrix.msc3827.stable");
-            })
-            .then((supported) => {
-                setSupportsSpaceFiltering(supported);
-            });
-    }, [cli]);
-
-    const {
-        loading: publicRoomsLoading,
-        publicRooms,
-        protocols,
-        config,
-        setConfig,
-        search: searchPublicRooms,
-        error: publicRoomsError,
-    } = usePublicRoomDirectory();
     const { loading: peopleLoading, users: userDirectorySearchResults, search: searchPeople } = useUserDirectory();
     const { loading: profileLoading, profile, search: searchProfileInfo } = useProfileInfo();
     const searchParams: [IDirectoryOpts] = useMemo(
         () => [
             {
                 query: trimmedQuery,
-                roomTypes: getRoomTypes(filter),
                 limit: SECTION_LIMIT,
             },
         ],
-        [trimmedQuery, filter],
-    );
-    useDebouncedCallback(
-        filter === Filter.PublicRooms || filter === Filter.PublicSpaces,
-        searchPublicRooms,
-        searchParams,
+        [trimmedQuery],
     );
     useDebouncedCallback(filter === Filter.People, searchPeople, searchParams);
-    useDebouncedCallback(filter === Filter.People, searchProfileInfo, searchParams);
+    useDebouncedCallback(
+        filter === Filter.People,
+        searchProfileInfo,
+        useMemo(
+            () => [{ query: /^@[^:]+:blackcandletech\.com$/.test(trimmedQuery) ? trimmedQuery : "" }],
+            [trimmedQuery],
+        ),
+    );
 
     const possibleResults = useMemo<Result[]>(() => {
         const visibleRooms = findVisibleRooms(cli, msc3946ProcessDynamicPredecessor);
@@ -397,6 +323,8 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
 
         function addUserResults(users: Array<Member | RoomMember>, alreadyFiltered: boolean): void {
             for (const user of users) {
+                // Tesseract only discovers people on its own homeserver.
+                if (!/^@[^:]+:blackcandletech\.com$/.test(user.userId)) continue;
                 // Make sure we don't have any user more than once
                 if (alreadyAddedUserIds.has(user.userId)) {
                     const result = alreadyAddedUserIds.get(user.userId)!;
@@ -430,9 +358,8 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
             })),
             ...roomResults,
             ...userResults,
-            ...publicRooms.map(toPublicRoomResult),
         ].filter((result) => filter === null || result.filter.includes(filter));
-    }, [cli, userDirectorySearchResults, profile, publicRooms, filter, msc3946ProcessDynamicPredecessor]);
+    }, [cli, userDirectorySearchResults, profile, filter, msc3946ProcessDynamicPredecessor]);
 
     const results = useMemo<Record<Section, Result[]>>(() => {
         const results: Record<Section, Result[]> = {
@@ -440,7 +367,6 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
             [Section.Rooms]: [],
             [Section.Spaces]: [],
             [Section.Suggestions]: [],
-            [Section.PublicRoomsAndSpaces]: [],
         };
 
         // Group results in their respective sections
@@ -464,21 +390,12 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
                     }
                 } else if (isMemberResult(entry)) {
                     if (!entry.alreadyFiltered && !entry.query?.some((q) => q.includes(lcQuery))) return; // bail, does not match query
-                } else if (isPublicRoomResult(entry)) {
-                    if (!entry.query?.some((q) => q.includes(lcQuery))) return; // bail, does not match query
                 } else {
                     if (!entry.name.toLowerCase().includes(lcQuery) && !entry.query?.some((q) => q.includes(lcQuery)))
                         return; // bail, does not match query
                 }
 
                 results[entry.section].push(entry);
-            });
-        } else if (filter === Filter.PublicRooms || filter === Filter.PublicSpaces) {
-            // return all results for public rooms if no query is given
-            possibleResults.forEach((entry) => {
-                if (isPublicRoomResult(entry)) {
-                    results[entry.section].push(entry);
-                }
             });
         } else if (filter === Filter.People) {
             // return all results for people if no query is given
@@ -541,18 +458,7 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
         // oxlint-disable-next-line react-hooks/exhaustive-deps
     }, [results, filter]);
 
-    const viewRoom = (
-        room: {
-            roomId: string;
-            roomAlias?: string;
-            autoJoin?: boolean;
-            shouldPeek?: boolean;
-            viaServers?: string[];
-            joinRule?: IPublicRoomsChunkRoom["join_rule"];
-        },
-        persist = false,
-        viaKeyboard = false,
-    ): void => {
+    const viewRoom = (room: { roomId: string }, persist = false, viaKeyboard = false): void => {
         if (persist) {
             const recents = new Set(SettingsStore.getValue("SpotlightSearch.recentSearches", null).reverse());
             // remove & add the room to put it at the end
@@ -572,76 +478,47 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
             metricsTrigger: "WebUnifiedSearch",
             metricsViaKeyboard: viaKeyboard,
             room_id: room.roomId,
-            room_alias: room.roomAlias,
-            auto_join: room.autoJoin && !canAskToJoin(room.joinRule),
-            should_peek: room.shouldPeek,
-            via_servers: room.viaServers,
         });
-
-        if (canAskToJoin(room.joinRule)) {
-            defaultDispatcher.dispatch({ action: Action.PromptAskToJoin });
-        }
 
         onFinished();
     };
 
-    let otherSearchesSection: JSX.Element | undefined;
-    if (trimmedQuery || (filter !== Filter.PublicRooms && filter !== Filter.PublicSpaces)) {
-        otherSearchesSection = (
-            <div
-                className="mx_SpotlightDialog_section mx_SpotlightDialog_otherSearches"
-                role="group"
-                aria-labelledby="mx_SpotlightDialog_section_otherSearches"
-            >
-                <h4 id="mx_SpotlightDialog_section_otherSearches">
-                    {trimmedQuery
-                        ? _t("spotlight_dialog|heading_with_query", { query })
-                        : _t("spotlight_dialog|heading_without_query")}
-                </h4>
-                <div>
-                    {filter !== Filter.PublicSpaces && supportsSpaceFiltering && (
-                        <Option
-                            id="mx_SpotlightDialog_button_explorePublicSpaces"
-                            onClick={() => setFilter(Filter.PublicSpaces)}
-                        >
-                            {filterToIcon(Filter.PublicSpaces)}
-                            {filterToLabel(Filter.PublicSpaces)}
-                        </Option>
-                    )}
-                    {filter !== Filter.PublicRooms && (
-                        <Option
-                            id="mx_SpotlightDialog_button_explorePublicRooms"
-                            onClick={() => setFilter(Filter.PublicRooms)}
-                        >
-                            {filterToIcon(Filter.PublicRooms)}
-                            {filterToLabel(Filter.PublicRooms)}
-                        </Option>
-                    )}
-                    {filter !== Filter.People && (
-                        <Option id="mx_SpotlightDialog_button_startChat" onClick={() => setFilter(Filter.People)}>
-                            {filterToIcon(Filter.People)}
-                            {filterToLabel(Filter.People)}
-                        </Option>
-                    )}
-                    {filter === null && (
-                        <Option
-                            id="mx_SpotlightDialog_button_searchMessages"
-                            onClick={() => {
-                                defaultDispatcher.dispatch({
-                                    action: Action.FocusMessageSearch,
-                                    initialText: trimmedQuery,
-                                });
-                                onFinished();
-                            }}
-                        >
-                            <ChatIcon />
-                            {_t("spotlight_dialog|messages_label")}
-                        </Option>
-                    )}
-                </div>
+    const otherSearchesSection = (
+        <div
+            className="mx_SpotlightDialog_section mx_SpotlightDialog_otherSearches"
+            role="group"
+            aria-labelledby="mx_SpotlightDialog_section_otherSearches"
+        >
+            <h4 id="mx_SpotlightDialog_section_otherSearches">
+                {trimmedQuery
+                    ? _t("spotlight_dialog|heading_with_query", { query })
+                    : _t("spotlight_dialog|heading_without_query")}
+            </h4>
+            <div>
+                {filter !== Filter.People && (
+                    <Option id="mx_SpotlightDialog_button_startChat" onClick={() => setFilter(Filter.People)}>
+                        {filterToIcon(Filter.People)}
+                        {filterToLabel(Filter.People)}
+                    </Option>
+                )}
+                {filter === null && (
+                    <Option
+                        id="mx_SpotlightDialog_button_searchMessages"
+                        onClick={() => {
+                            defaultDispatcher.dispatch({
+                                action: Action.FocusMessageSearch,
+                                initialText: trimmedQuery,
+                            });
+                            onFinished();
+                        }}
+                    >
+                        <ChatIcon />
+                        {_t("spotlight_dialog|messages_label")}
+                    </Option>
+                )}
             </div>
-        );
-    }
+        </div>
+    );
 
     let content: JSX.Element;
     if (trimmedQuery || filter !== null) {
@@ -711,82 +588,6 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
                     </Option>
                 );
             }
-            if (isPublicRoomResult(result)) {
-                const clientRoom = cli.getRoom(result.publicRoom.room_id);
-                const joinRule = result.publicRoom.join_rule;
-                // Element Web currently does not allow guests to join rooms, so we
-                // instead show them view buttons for all rooms. If the room is not
-                // world readable, a modal will appear asking you to register first. If
-                // it is readable, the preview appears as normal.
-                const showViewButton =
-                    clientRoom?.getMyMembership() === KnownMembership.Join ||
-                    (result.publicRoom.world_readable && !canAskToJoin(joinRule)) ||
-                    cli.isGuest();
-
-                const listener = (ev: ButtonEvent): void => {
-                    ev.stopPropagation();
-
-                    const { publicRoom } = result;
-                    viewRoom(
-                        {
-                            roomAlias: publicRoom.canonical_alias || publicRoom.aliases?.[0],
-                            roomId: publicRoom.room_id,
-                            autoJoin: !result.publicRoom.world_readable && !cli.isGuest(),
-                            shouldPeek: result.publicRoom.world_readable || cli.isGuest(),
-                            viaServers: config ? [config.roomServer] : undefined,
-                            joinRule,
-                        },
-                        true,
-                        ev.type !== "click",
-                    );
-                };
-
-                let buttonLabel;
-                if (showViewButton) {
-                    buttonLabel = _t("action|view");
-                } else {
-                    buttonLabel = canAskToJoin(joinRule) ? _t("action|ask_to_join") : _t("action|join");
-                }
-
-                return (
-                    <Option
-                        id={`mx_SpotlightDialog_button_result_${result.publicRoom.room_id}`}
-                        className="mx_SpotlightDialog_result_multiline"
-                        key={`${Section[result.section]}-${result.publicRoom.room_id}`}
-                        onClick={listener}
-                        endAdornment={
-                            <AccessibleButton
-                                kind={showViewButton ? "primary_outline" : "primary"}
-                                onClick={listener}
-                                tabIndex={-1}
-                            >
-                                {buttonLabel}
-                            </AccessibleButton>
-                        }
-                        aria-labelledby={`mx_SpotlightDialog_button_result_${result.publicRoom.room_id}_name`}
-                        aria-describedby={`mx_SpotlightDialog_button_result_${result.publicRoom.room_id}_alias`}
-                        aria-details={`mx_SpotlightDialog_button_result_${result.publicRoom.room_id}_details`}
-                    >
-                        <RoomAvatar
-                            className="mx_SearchResultAvatar"
-                            oobData={{
-                                roomId: result.publicRoom.room_id,
-                                name: result.publicRoom.name,
-                                avatarUrl: result.publicRoom.avatar_url,
-                                roomType: result.publicRoom.room_type,
-                            }}
-                            size={AVATAR_SIZE}
-                        />
-                        <PublicRoomResultDetails
-                            room={result.publicRoom}
-                            labelId={`mx_SpotlightDialog_button_result_${result.publicRoom.room_id}_name`}
-                            descriptionId={`mx_SpotlightDialog_button_result_${result.publicRoom.room_id}_alias`}
-                            detailsId={`mx_SpotlightDialog_button_result_${result.publicRoom.room_id}_details`}
-                        />
-                    </Option>
-                );
-            }
-
             // IResult case
             return (
                 <Option
@@ -857,38 +658,6 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
             );
         }
 
-        let publicRoomsSection: JSX.Element | undefined;
-        if (filter === Filter.PublicRooms || filter === Filter.PublicSpaces) {
-            let content: JSX.Element | JSX.Element[];
-            if (publicRoomsError) {
-                content = (
-                    <div className="mx_SpotlightDialog_otherSearches_messageSearchText">
-                        {filter === Filter.PublicRooms
-                            ? _t("spotlight_dialog|failed_querying_public_rooms")
-                            : _t("spotlight_dialog|failed_querying_public_spaces")}
-                    </div>
-                );
-            } else {
-                content = results[Section.PublicRoomsAndSpaces].slice(0, SECTION_LIMIT).map(resultMapper);
-            }
-
-            publicRoomsSection = (
-                <div
-                    className="mx_SpotlightDialog_section mx_SpotlightDialog_results"
-                    role="group"
-                    aria-labelledby="mx_SpotlightDialog_section_publicRooms"
-                >
-                    <div className="mx_SpotlightDialog_sectionHeader">
-                        <h4 id="mx_SpotlightDialog_section_publicRooms">{_t("common|suggestions")}</h4>
-                        <div className="mx_SpotlightDialog_options">
-                            <NetworkDropdown protocols={protocols} config={config ?? null} setConfig={setConfig} />
-                        </div>
-                    </div>
-                    <div>{content}</div>
-                </div>
-            );
-        }
-
         let spaceRoomsSection: JSX.Element | undefined;
         if (spaceResults.length && activeSpace && filter === null) {
             spaceRoomsSection = (
@@ -936,7 +705,7 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
         let joinRoomSection: JSX.Element | undefined;
         if (
             trimmedQuery.startsWith("#") &&
-            trimmedQuery.includes(":") &&
+            /^#[^:]+:blackcandletech\.com$/.test(trimmedQuery) &&
             (!getCachedRoomIdForAlias(trimmedQuery) || !cli.getRoom(getCachedRoomIdForAlias(trimmedQuery)!.roomId))
         ) {
             joinRoomSection = (
@@ -992,31 +761,6 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
                     </TooltipOption>
                 </div>
             );
-        } else if (trimmedQuery && (filter === Filter.PublicRooms || filter === Filter.PublicSpaces)) {
-            hiddenResultsSection = (
-                <div className="mx_SpotlightDialog_section mx_SpotlightDialog_hiddenResults" role="group">
-                    <h4>{_t("spotlight_dialog|result_may_be_hidden_warning")}</h4>
-                    <div className="mx_SpotlightDialog_otherSearches_messageSearchText">
-                        {_t("spotlight_dialog|cant_find_room_helpful_hint")}
-                    </div>
-                    <Option
-                        id="mx_SpotlightDialog_button_createNewRoom"
-                        className="mx_SpotlightDialog_createRoom"
-                        onClick={() =>
-                            defaultDispatcher.dispatch({
-                                action: Action.CreateRoom,
-                                public: true,
-                                defaultName: capitalize(trimmedQuery),
-                            })
-                        }
-                    >
-                        <span className="mx_AccessibleButton mx_AccessibleButton_hasKind mx_AccessibleButton_kind_primary_outline">
-                            <RoomIcon />
-                            {_t("spotlight_dialog|create_new_room_button")}
-                        </span>
-                    </Option>
-                </div>
-            );
         }
 
         let groupChatSection: JSX.Element | undefined;
@@ -1049,7 +793,6 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
             (filter === Filter.People && !!results[Section.Suggestions].length) ||
             !!results[Section.Rooms].length ||
             !!results[Section.Spaces].length ||
-            !!results[Section.PublicRoomsAndSpaces].length ||
             !!spaceResults.length ||
             !!joinRoomSection;
         if (trimmedQuery && !hasResults) {
@@ -1070,7 +813,6 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
                 {roomsSection}
                 {spacesSection}
                 {spaceRoomsSection}
-                {publicRoomsSection}
                 {joinRoomSection}
                 {hiddenResultsSection}
                 {otherSearchesSection}
@@ -1333,7 +1075,7 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
                         aria-label={_t("action|search")}
                         aria-describedby="mx_SpotlightDialog_keyboardPrompt"
                     />
-                    {(publicRoomsLoading || peopleLoading || profileLoading) && <Spinner size={24} />}
+                    {(peopleLoading || profileLoading) && <Spinner size={24} />}
                 </div>
 
                 <div

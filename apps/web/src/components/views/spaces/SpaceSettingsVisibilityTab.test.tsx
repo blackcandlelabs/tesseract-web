@@ -19,7 +19,6 @@ import {
     GuestAccess,
     HistoryVisibility,
     JoinRule,
-    Visibility,
 } from "matrix-js-sdk/src/matrix";
 import {
     createTestClient,
@@ -142,7 +141,6 @@ describe("<SpaceSettingsVisibilityTab />", () => {
         const joinRule = JoinRule.Public;
         const guestRule = GuestAccess.CanJoin;
         const historyRule = HistoryVisibility.Joined;
-        vi.mocked(mockMatrixClient.getRoomDirectoryVisibility).mockResolvedValue({ visibility: Visibility.Public });
 
         describe("Access", () => {
             it("renders guest access section toggle", async () => {
@@ -246,19 +244,17 @@ describe("<SpaceSettingsVisibilityTab />", () => {
             });
         });
 
-        it("renders addresses section with publish toggle", async () => {
+        it("renders addresses without public directory publication", async () => {
             const space = makeMockSpace(mockMatrixClient, joinRule, guestRule);
-            const { getByLabelText, getByTestId, asFragment } = getComponent({ space });
+            const { queryByLabelText, getByTestId, asFragment } = getComponent({ space });
 
             expect(getByTestId("published-address-fieldset")).toBeTruthy();
             expect(getByTestId("local-address-fieldset")).toBeTruthy();
-            // Wait for the async serverSupportsExploringSpaces / room directory visibility checks to resolve
-            // and flow through React state updates (a few chained promises deep).
-            await vi.advanceTimersByTimeAsync(0);
             await vi.advanceTimersByTimeAsync(0);
             expect(
-                getByLabelText("Publish this room to the public in matrix.org's room directory?"),
-            ).toBeInTheDocument();
+                queryByLabelText("Publish this room to the public in matrix.org's room directory?"),
+            ).not.toBeInTheDocument();
+            expect(mockMatrixClient.getRoomDirectoryVisibility).not.toHaveBeenCalled();
             expect(asFragment()).toMatchSnapshot();
         });
     });

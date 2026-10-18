@@ -11,7 +11,6 @@ import { CommandOrControl } from "../e2e/utils";
 
 export enum Filter {
     People = "people",
-    PublicRooms = "public_rooms",
 }
 
 export class Spotlight {
@@ -34,9 +33,6 @@ export class Spotlight {
         switch (filter) {
             case Filter.People:
                 selector = "#mx_SpotlightDialog_button_startChat";
-                break;
-            case Filter.PublicRooms:
-                selector = "#mx_SpotlightDialog_button_explorePublicRooms";
                 break;
             default:
                 selector = ".mx_SpotlightDialog_filter";

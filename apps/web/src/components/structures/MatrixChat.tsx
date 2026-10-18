@@ -130,7 +130,6 @@ import { sanitizeHtmlText } from "../../HtmlUtils";
 import { NotificationLevel } from "../../stores/notifications/NotificationLevel";
 import { type UserTab } from "../views/dialogs/UserTab";
 import { shouldSkipSetupEncryption } from "../../utils/crypto/shouldSkipSetupEncryption";
-import { Filter } from "../views/dialogs/spotlight/Filter";
 import { SessionLockStolenView } from "./auth/SessionLockStolenView";
 import { ConfirmSessionLockTheftView } from "./auth/ConfirmSessionLockTheftView";
 import { LoginSplashView } from "./auth/LoginSplashView";
@@ -803,7 +802,6 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                     RovingSpotlightDialog,
                     {
                         initialText: payload.initialText,
-                        initialFilter: Filter.PublicRooms,
                     },
                     "mx_SpotlightDialog_wrapper",
                     false,

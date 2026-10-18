@@ -247,7 +247,7 @@ describe("<CreateRoomDialog />", () => {
             await flushPromises();
 
             expect(onFinished).toHaveBeenCalledWith(true, {
-                createOpts: {},
+                createOpts: { visibility: Visibility.Private },
                 name: roomName,
                 encryption: true,
                 stateEncryption: false,
@@ -338,23 +338,10 @@ describe("<CreateRoomDialog />", () => {
                 });
             });
 
-            it("should create a knock room with public visibility", async () => {
-                fireEvent.click(
-                    screen.getByRole("switch", { name: "Make this room visible in the public room directory." }),
-                );
-                fireEvent.click(screen.getByText("Create room"));
-                await flushPromises();
-                expect(onFinished).toHaveBeenCalledWith(true, {
-                    createOpts: {
-                        visibility: Visibility.Public,
-                    },
-                    name: roomName,
-                    encryption: true,
-                    stateEncryption: false,
-                    joinRule: JoinRule.Knock,
-                    parentSpace: undefined,
-                    roomType: undefined,
-                });
+            it("does not offer public directory publication", () => {
+                expect(
+                    screen.queryByRole("switch", { name: "Make this room visible in the public room directory." }),
+                ).not.toBeInTheDocument();
             });
         });
     });
@@ -421,7 +408,7 @@ describe("<CreateRoomDialog />", () => {
                 createOpts: {
                     preset: Preset.PublicChat,
                     room_alias_name: roomAlias,
-                    visibility: Visibility.Public,
+                    visibility: Visibility.Private,
                 },
                 name: roomName,
                 guestAccess: false,
@@ -480,7 +467,7 @@ describe("<CreateRoomDialog />", () => {
                     name: "Public Room",
                     createOpts: expect.objectContaining({
                         room_alias_name: "testroom",
-                        visibility: Visibility.Public,
+                        visibility: Visibility.Private,
                         preset: Preset.PublicChat,
                     }),
                     guestAccess: false,

@@ -25,7 +25,6 @@ import Spinner from "../elements/Spinner";
 import ErrorDialog from "../dialogs/ErrorDialog";
 import AccessibleButton from "../elements/AccessibleButton";
 import Modal from "../../../Modal";
-import RoomPublishSetting from "./RoomPublishSetting";
 import RoomAliasField from "../elements/RoomAliasField";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import SettingsFieldset from "../settings/SettingsFieldset";
@@ -406,12 +405,6 @@ export default class AliasSettings extends React.Component<IProps, IState> {
                     }
                 >
                     {canonicalAliasSection}
-                    {this.props.hidePublishSetting ? null : (
-                        <RoomPublishSetting
-                            roomId={this.props.roomId}
-                            canSetCanonicalAlias={this.props.canSetCanonicalAlias}
-                        />
-                    )}
                     <datalist id="mx_AliasSettings_altRecommendations">
                         {this.getLocalNonAltAliases().map((alias) => {
                             return <option value={alias} key={alias} aria-label={alias} />;

@@ -117,66 +117,6 @@ exports[`Spotlight Dialog > metaspaces > should show Home metaspace 1`] = `
           <li
             aria-selected="false"
             class="mx_AccessibleButton mx_SpotlightDialog_option"
-            id="mx_SpotlightDialog_button_explorePublicSpaces"
-            role="option"
-            tabindex="-1"
-          >
-            <svg
-              fill="currentColor"
-              height="1em"
-              viewBox="0 0 24 24"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M6 21q-1.65 0-2.825-1.175T2 17t1.175-2.825T6 13t2.825 1.175T10 17t-1.175 2.825T6 21m12 0q-1.65 0-2.825-1.175T14 17t1.175-2.825T18 13t2.825 1.175T22 17t-1.175 2.825T18 21M6 19q.824 0 1.412-.587Q8 17.825 8 17t-.588-1.412A1.93 1.93 0 0 0 6 15q-.824 0-1.412.588A1.93 1.93 0 0 0 4 17q0 .824.588 1.413Q5.175 19 6 19m12 0q.824 0 1.413-.587Q20 17.825 20 17t-.587-1.412A1.93 1.93 0 0 0 18 15q-.824 0-1.413.588A1.93 1.93 0 0 0 16 17q0 .824.587 1.413Q17.176 19 18 19m-6-8q-1.65 0-2.825-1.175T8 7t1.175-2.825T12 3t2.825 1.175T16 7t-1.175 2.825T12 11m0-2q.825 0 1.412-.588Q14 7.826 14 7q0-.824-.588-1.412A1.93 1.93 0 0 0 12 5q-.825 0-1.412.588A1.93 1.93 0 0 0 10 7q0 .824.588 1.412Q11.175 9 12 9"
-              />
-            </svg>
-            Public spaces
-            <div
-              class="mx_SpotlightDialog_option--endAdornment"
-            >
-              <kbd
-                aria-hidden="true"
-                class="mx_SpotlightDialog_enterPrompt"
-              >
-                ↵
-              </kbd>
-            </div>
-          </li>
-          <li
-            aria-selected="false"
-            class="mx_AccessibleButton mx_SpotlightDialog_option"
-            id="mx_SpotlightDialog_button_explorePublicRooms"
-            role="option"
-            tabindex="-1"
-          >
-            <svg
-              fill="currentColor"
-              height="1em"
-              viewBox="0 0 24 24"
-              width="1em"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="m8.566 17-.944 4.094q-.086.406-.372.656t-.687.25q-.543 0-.887-.469a1.18 1.18 0 0 1-.2-1.031l.801-3.5H3.158q-.572 0-.916-.484a1.27 1.27 0 0 1-.2-1.078 1.12 1.12 0 0 1 1.116-.938H6.85l1.145-5h-3.12q-.57 0-.915-.484a1.27 1.27 0 0 1-.2-1.078A1.12 1.12 0 0 1 4.875 7h3.691l.945-4.094q.085-.406.372-.656.286-.25.686-.25.544 0 .887.469.345.468.2 1.031l-.8 3.5h4.578l.944-4.094q.085-.406.372-.656.286-.25.687-.25.543 0 .887.469t.2 1.031L17.723 7h3.119q.573 0 .916.484.343.485.2 1.079a1.12 1.12 0 0 1-1.116.937H17.15l-1.145 5h3.12q.57 0 .915.484.343.485.2 1.079a1.12 1.12 0 0 1-1.116.937h-3.691l-.944 4.094q-.087.406-.373.656t-.686.25q-.544 0-.887-.469a1.18 1.18 0 0 1-.2-1.031l.8-3.5zm.573-2.5h4.578l1.144-5h-4.578z"
-              />
-            </svg>
-            Public rooms
-            <div
-              class="mx_SpotlightDialog_option--endAdornment"
-            >
-              <kbd
-                aria-hidden="true"
-                class="mx_SpotlightDialog_enterPrompt"
-              >
-                ↵
-              </kbd>
-            </div>
-          </li>
-          <li
-            aria-selected="false"
-            class="mx_AccessibleButton mx_SpotlightDialog_option"
             id="mx_SpotlightDialog_button_startChat"
             role="option"
             tabindex="-1"

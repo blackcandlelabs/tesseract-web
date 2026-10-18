@@ -51,11 +51,6 @@ interface IState {
      */
     joinRule: JoinRule;
     /**
-     * Indicates whether the created room should have public visibility (ie, it should be
-     * shown in the public room list). Only applicable if `joinRule` == `JoinRule.Knock`.
-     */
-    isPublicKnockRoom: boolean;
-    /**
      * Indicates whether end-to-end encryption is enabled for the room.
      */
     isEncrypted: boolean;
@@ -121,7 +116,6 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
 
         const cli = MatrixClientPeg.safeGet();
         this.state = {
-            isPublicKnockRoom: defaultPublic || false,
             isEncrypted: this.props.defaultEncrypted ?? privateShouldBeEncrypted(cli),
             isStateEncrypted: this.props.defaultStateEncrypted ?? false,
             joinRule,
@@ -137,12 +131,12 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
 
     private roomCreateOptions(): IOpts {
         const opts: IOpts = {};
-        const createOpts: IOpts["createOpts"] = (opts.createOpts = {});
+        // Directory publication is never available on this homeserver.
+        const createOpts: IOpts["createOpts"] = (opts.createOpts = { visibility: Visibility.Private });
         opts.roomType = this.props.type;
         opts.name = this.state.name;
 
         if (this.state.joinRule === JoinRule.Public) {
-            createOpts.visibility = Visibility.Public;
             createOpts.preset = Preset.PublicChat;
             opts.guestAccess = false;
             const { alias } = this.state;
@@ -168,7 +162,6 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
 
         if (this.state.joinRule === JoinRule.Knock) {
             opts.joinRule = JoinRule.Knock;
-            createOpts.visibility = this.state.isPublicKnockRoom ? Visibility.Public : Visibility.Private;
         }
 
         return opts;
@@ -268,10 +261,6 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
         return result;
     };
 
-    private onIsPublicKnockRoomChange: ChangeEventHandler<HTMLInputElement> = (evt): void => {
-        this.setState({ isPublicKnockRoom: evt.target.checked });
-    };
-
     private static validateRoomName = withValidation({
         rules: [
             {
@@ -351,19 +340,6 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
             );
         } else if (this.state.joinRule === JoinRule.Knock) {
             publicPrivateLabel = <p>{_t("create_room|join_rule_knock_label")}</p>;
-        }
-
-        let visibilitySection: JSX.Element | undefined;
-        if (this.state.joinRule === JoinRule.Knock) {
-            visibilitySection = (
-                <SettingsToggleInput
-                    name="publish-room"
-                    className="mx_CreateRoomDialog_labelledCheckbox"
-                    label={_t("room_settings|security|publish_room")}
-                    onChange={this.onIsPublicKnockRoomChange}
-                    checked={this.state.isPublicKnockRoom}
-                />
-            );
         }
 
         let e2eeSection: JSX.Element | undefined;
@@ -476,7 +452,6 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
                             {publicPrivateLabel}
                         </div>
 
-                        {visibilitySection}
                         {e2eeSection}
                         {e2eeStateSection}
                         {aliasField}

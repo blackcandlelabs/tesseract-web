@@ -8,6 +8,4 @@ Please see LICENSE files in the repository root for full details.
 
 export enum Filter {
     People,
-    PublicRooms,
-    PublicSpaces,
 }

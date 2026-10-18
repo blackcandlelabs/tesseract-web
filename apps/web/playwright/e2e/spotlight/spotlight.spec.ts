@@ -94,6 +94,7 @@ test.describe("Spotlight", () => {
     test.skip(isDendrite, "due to a Dendrite bug https://github.com/element-hq/dendrite/issues/3488");
     test.use({
         displayName: "Jim",
+        synapseConfig: { server_name: "blackcandletech.com" },
     });
 
     test.beforeEach(async ({ page, user, bot1, bot2, room1, room2, room3 }) => {
@@ -109,26 +110,14 @@ test.describe("Spotlight", () => {
         const spotlight = await app.openSpotlight();
         await page.waitForTimeout(1000); // wait for the dialog to settle, otherwise our keypresses might race with an update
 
-        // initially, public spaces should be highlighted (because there are no other suggestions)
-        await expect(spotlight.dialog.locator("#mx_SpotlightDialog_button_explorePublicSpaces")).toHaveAttribute(
+        await expect(spotlight.dialog.getByRole("option", { name: "People", exact: true })).toHaveAttribute(
             "aria-selected",
             "true",
         );
-
-        // hitting enter should enable the public rooms filter
+        await expect(spotlight.dialog.getByRole("option", { name: "Public rooms" })).not.toBeAttached();
+        await expect(spotlight.dialog.getByRole("option", { name: "Public spaces" })).not.toBeAttached();
         await spotlight.searchBox.press("Enter");
-        await expect(spotlight.dialog.locator(".mx_SpotlightDialog_filter")).toHaveText("Public spaces");
-        await spotlight.searchBox.press("Backspace");
-        await expect(spotlight.dialog.locator(".mx_SpotlightDialog_filter")).not.toBeAttached();
-        await page.waitForTimeout(200); // Again, wait to settle so keypresses arrive correctly
-
-        await spotlight.searchBox.press("ArrowDown");
-        await expect(spotlight.dialog.locator("#mx_SpotlightDialog_button_explorePublicRooms")).toHaveAttribute(
-            "aria-selected",
-            "true",
-        );
-        await spotlight.searchBox.press("Enter");
-        await expect(spotlight.dialog.locator(".mx_SpotlightDialog_filter")).toHaveText("Public rooms");
+        await expect(spotlight.dialog.locator(".mx_SpotlightDialog_filter")).toHaveText("People");
         await spotlight.searchBox.press("Backspace");
         await expect(spotlight.dialog.locator(".mx_SpotlightDialog_filter")).not.toBeAttached();
     });
@@ -145,71 +134,11 @@ test.describe("Spotlight", () => {
         await expect(roomHeaderName(page)).toContainText(room1.name);
     });
 
-    test("should find known public rooms", async ({ page, app, room1 }) => {
+    test("should not discover unjoined public rooms", async ({ app, room2 }) => {
         const spotlight = await app.openSpotlight();
-        await page.waitForTimeout(500); // wait for the dialog to settle
-        await spotlight.filter(Filter.PublicRooms);
-        await spotlight.search(room1.name);
-        const resultLocator = spotlight.results;
-        await expect(resultLocator).toHaveCount(1);
-        await expect(resultLocator.first()).toContainText(room1.name);
-        await expect(resultLocator.first()).toContainText("View");
-        await resultLocator.first().click();
-        await expect(page).toHaveURL(new RegExp(`#/room/${room1.roomId}`));
-        await expect(roomHeaderName(page)).toContainText(room1.name);
-    });
-
-    test("should find unknown public rooms", async ({ page, app, room2 }) => {
-        const spotlight = await app.openSpotlight();
-        await page.waitForTimeout(500); // wait for the dialog to settle
-        await spotlight.filter(Filter.PublicRooms);
         await spotlight.search(room2.name);
-        const resultLocator = spotlight.results;
-        await expect(resultLocator).toHaveCount(1);
-        await expect(resultLocator.first()).toContainText(room2.name);
-        await expect(resultLocator.first()).toContainText("Join");
-        await resultLocator.first().click();
-        await expect(page).toHaveURL(new RegExp(`#/room/${room2.roomId}`));
-        await expect(page.locator(".mx_RoomView_MessageList")).toHaveCount(1);
-        await expect(roomHeaderName(page)).toContainText(room2.name);
-    });
-
-    test("should find unknown public world readable rooms", async ({ page, app, room3 }) => {
-        const spotlight = await app.openSpotlight();
-        await page.waitForTimeout(500); // wait for the dialog to settle
-        await spotlight.filter(Filter.PublicRooms);
-        await spotlight.search(room3.name);
-        const resultLocator = spotlight.results;
-        await expect(resultLocator).toHaveCount(1);
-        await expect(resultLocator.first()).toContainText(room3.name);
-        await expect(resultLocator.first()).toContainText("View");
-        await resultLocator.first().click();
-        await expect(page).toHaveURL(new RegExp(`#/room/${room3.roomId}`));
-        await page.getByRole("button", { name: "Join the discussion" }).click();
-        await expect(roomHeaderName(page)).toHaveText(room3.name);
-    });
-
-    // TODO: We currently can’t test finding rooms on other homeservers/other protocols
-    // We obviously don’t have federation or bridges in local e2e tests
-    test.skip("should find unknown public rooms on other homeservers", async ({ page, app, room3 }) => {
-        const spotlight = await app.openSpotlight();
-        await page.waitForTimeout(500); // wait for the dialog to settle
-        await spotlight.filter(Filter.PublicRooms);
-        await spotlight.search(room3.name);
-        await page.locator("[aria-haspopup=true][role=button]").click();
-
-        await page
-            .locator(".mx_GenericDropdownMenu_Option--header")
-            .filter({ hasText: "matrix.org" })
-            .locator("..")
-            .locator("[role=menuitemradio]")
-            .click();
-        await page.waitForTimeout(500); // wait for the dialog to settle
-
-        const resultLocator = spotlight.results;
-        await expect(resultLocator).toHaveCount(1);
-        await expect(resultLocator.first()).toContainText(room3.name);
-        await expect(resultLocator.first()).toContainText(room3.roomId);
+        await expect(spotlight.dialog.getByText(room2.name, { exact: true })).not.toBeAttached();
+        await expect(spotlight.dialog.getByText("No results found")).toBeVisible();
     });
 
     test("should find known people", async ({ page, app, bot1 }) => {
@@ -417,10 +346,9 @@ test.describe("Spotlight", () => {
             test(
                 "should have legible text across Spotlight surfaces",
                 { tag: "@screenshot" },
-                async ({ page, app, user, room1, bot1, bot2, axe }) => {
-                    // Every scan below needs a selected row and a row at rest side by side, so each
-                    // search has to return at least two results: a second joined room and a second
-                    // public room whose names match room1's. The joined room sits in a space so its row shows
+                async ({ page, app, user, room1, bot1, axe }) => {
+                    // Each scan needs a selected row and a row at rest, so add a second joined room
+                    // whose name matches room1's. The joined room sits in a space so its row shows
                     // context details (the space name) in the small secondary text, and bot1 (already in
                     // room1, see the top-level beforeEach) leaves an unread mention there so one row carries
                     // a badge with a count.
@@ -431,7 +359,6 @@ test.describe("Spotlight", () => {
                             { type: "m.space.child", state_key: notesRoomId, content: { via: [user.homeServer] } },
                         ],
                     });
-                    await bot2.createRoom({ name: `${room1.name} annex`, visibility: "public" as Visibility });
                     await bot1.sendMessage(room1.roomId, `Hey ${user.displayName}`);
 
                     // room1 is already open (see room1 fixture); navigate away from it so it
@@ -472,7 +399,7 @@ test.describe("Spotlight", () => {
                     // The first result is selected by default, which is the same styling as hover, so
                     // one scan covers a selected row and rows at rest without needing the pointer.
                     await spotlight.search(room1.name);
-                    let results = spotlight.results;
+                    const results = spotlight.results;
                     await expect.poll(() => results.count()).toBeGreaterThanOrEqual(2);
                     await expect(results.first()).toHaveAttribute("aria-selected", "true");
                     await expect(results.nth(1)).toHaveAttribute("aria-selected", "false");
@@ -500,25 +427,6 @@ test.describe("Spotlight", () => {
                     const restingRow = results.filter({ hasText: `${room1.name} notes` });
                     await expect(restingRow).toHaveAttribute("aria-selected", "false");
                     await expect(restingRow).toMatchScreenshot(`spotlight-row-at-rest-${theme}.png`);
-
-                    // Public-room results: the alias is rendered small and, at rest, in a secondary colour,
-                    // so both the selected row and the row at rest have to clear WCAG AA.
-                    await spotlight.filter(Filter.PublicRooms);
-                    await spotlight.search(room1.name);
-
-                    const filterChip = spotlight.dialog.locator(".mx_SpotlightDialog_filter");
-                    await expect(filterChip).toHaveText("Public rooms");
-
-                    results = spotlight.results;
-                    await expect(results).toHaveCount(2);
-                    await expect(results.first()).toHaveAttribute("aria-selected", "true");
-                    await expect(results.nth(1)).toHaveAttribute("aria-selected", "false");
-                    await expect(results.locator(".mx_SpotlightDialog_result_publicRoomAlias")).toHaveCount(2);
-
-                    axe.include(".mx_SpotlightDialog_filter");
-                    // XXX: same nested-interactive issue as above; here the endAdornment is the
-                    // View/Join button rather than RoomResultContextMenus.
-                    await expect(axe).toHaveNoViolations();
                 },
             );
         });

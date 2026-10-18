@@ -11,10 +11,8 @@ Please see LICENSE files in the repository root for full details.
 import React from "react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-    ConnectionError,
     type IProtocol,
     type IPublicRoomsChunkRoom,
-    JoinRule,
     type MatrixClient,
     type Room,
     RoomMember,
@@ -131,7 +129,7 @@ function mockClient({
 
 describe("Spotlight Dialog", () => {
     const testPerson: IUserChunkMember = {
-        user_id: "@janedoe:matrix.org",
+        user_id: "@janedoe:blackcandletech.com",
         display_name: "Jane Doe",
         avatar_url: undefined,
     };
@@ -146,7 +144,7 @@ describe("Spotlight Dialog", () => {
     };
 
     const testDMRoomId = "!testDM:example.com";
-    const testDMUserId = "@alice:matrix.org";
+    const testDMUserId = "@alice:blackcandletech.com";
 
     let testRoom: Room;
     let testDM: Room;
@@ -232,25 +230,6 @@ describe("Spotlight Dialog", () => {
             expect(filterChip).not.toBeInTheDocument();
         });
 
-        it("with public room filter", async () => {
-            render(<SpotlightDialog initialFilter={Filter.PublicRooms} onFinished={() => null} />);
-
-            // search is debounced
-            vi.advanceTimersByTime(200);
-            await flushPromisesWithFakeTimers();
-
-            const filterChip = document.querySelector("div.mx_SpotlightDialog_filter")!;
-            expect(filterChip).toBeInTheDocument();
-            expect(filterChip.innerHTML).toContain("Public rooms");
-
-            await waitFor(() => {
-                const content = document.querySelector("#mx_SpotlightDialog_content")!;
-                const options = content.querySelectorAll("li.mx_SpotlightDialog_option");
-                expect(options.length).toBe(1);
-                expect(options[0]!.innerHTML).toContain(testPublicRoom.name);
-            });
-        });
-
         it("with people filter", async () => {
             render(
                 <SpotlightDialog
@@ -294,30 +273,6 @@ describe("Spotlight Dialog", () => {
     });
 
     describe("should apply manually selected filter", () => {
-        it("with public rooms", async () => {
-            render(<SpotlightDialog onFinished={() => null} />);
-            vi.advanceTimersByTime(200);
-            await flushPromisesWithFakeTimers();
-
-            fireEvent.click(screen.getByText("Public rooms"));
-            // search is debounced
-            vi.advanceTimersByTime(200);
-            await flushPromisesWithFakeTimers();
-
-            const filterChip = document.querySelector("div.mx_SpotlightDialog_filter")!;
-            expect(filterChip).toBeInTheDocument();
-            expect(filterChip.innerHTML).toContain("Public rooms");
-
-            await waitFor(() => {
-                const content = document.querySelector("#mx_SpotlightDialog_content")!;
-                const options = content.querySelectorAll("li.mx_SpotlightDialog_option");
-                expect(options.length).toBe(1);
-                expect(options[0]!.innerHTML).toContain(testPublicRoom.name);
-            });
-
-            // assert that getVisibleRooms is called without MSC3946 dynamic room predecessors
-            expect(mockedClient.getVisibleRooms).toHaveBeenCalledWith(false);
-        });
         it("with people", async () => {
             render(<SpotlightDialog initialText={testPerson.display_name} onFinished={() => null} />);
             vi.advanceTimersByTime(200);
@@ -343,23 +298,6 @@ describe("Spotlight Dialog", () => {
     });
 
     describe("should allow clearing filter manually", () => {
-        it("with public room filter", async () => {
-            render(<SpotlightDialog initialFilter={Filter.PublicRooms} onFinished={() => null} />);
-            // search is debounced
-            vi.advanceTimersByTime(200);
-            await flushPromisesWithFakeTimers();
-
-            let filterChip = document.querySelector("div.mx_SpotlightDialog_filter")!;
-            expect(filterChip).toBeInTheDocument();
-            expect(filterChip.innerHTML).toContain("Public rooms");
-
-            fireEvent.click(filterChip.querySelector("div.mx_SpotlightDialog_filter--close")!);
-            vi.advanceTimersByTime(200);
-            await flushPromisesWithFakeTimers();
-
-            filterChip = document.querySelector("div.mx_SpotlightDialog_filter")!;
-            expect(filterChip).not.toBeInTheDocument();
-        });
         it("with people filter", async () => {
             render(
                 <SpotlightDialog
@@ -399,12 +337,12 @@ describe("Spotlight Dialog", () => {
         });
 
         it("should find Rooms", () => {
-            expect(options).toHaveLength(5);
+            expect(options).toHaveLength(3);
             expect(options[0]!.innerHTML).toContain(testRoom.name);
         });
 
         it("should not find LocalRooms", () => {
-            expect(options).toHaveLength(5);
+            expect(options).toHaveLength(3);
             expect(options[0]!.innerHTML).not.toContain(testLocalRoom.name);
         });
     });
@@ -412,8 +350,8 @@ describe("Spotlight Dialog", () => {
     it("should not filter out users sent by the server", async () => {
         vi.mocked(mockedClient.searchUserDirectory).mockResolvedValue({
             results: [
-                { user_id: "@user1:server", display_name: "User Alpha", avatar_url: "mxc://1/avatar" },
-                { user_id: "@user2:server", display_name: "User Beta", avatar_url: "mxc://2/avatar" },
+                { user_id: "@user1:blackcandletech.com", display_name: "User Alpha", avatar_url: "mxc://1/avatar" },
+                { user_id: "@user2:blackcandletech.com", display_name: "User Beta", avatar_url: "mxc://2/avatar" },
             ],
             limited: false,
         });
@@ -439,8 +377,8 @@ describe("Spotlight Dialog", () => {
         vi.mocked(testRoom.getJoinedMembers).mockReturnValue([member]);
         vi.mocked(mockedClient.searchUserDirectory).mockResolvedValue({
             results: [
-                { user_id: "@janedoe:matrix.org", display_name: "User Alpha", avatar_url: "mxc://1/avatar" },
-                { user_id: "@johndoe:matrix.org", display_name: "User Beta", avatar_url: "mxc://2/avatar" },
+                { user_id: "@janedoe:blackcandletech.com", display_name: "User Alpha", avatar_url: "mxc://1/avatar" },
+                { user_id: "@johndoe:blackcandletech.com", display_name: "User Beta", avatar_url: "mxc://2/avatar" },
             ],
             limited: false,
         });
@@ -463,7 +401,7 @@ describe("Spotlight Dialog", () => {
         vi.mocked(mockedClient.searchUserDirectory).mockResolvedValue({
             results: [
                 { user_id: testDMUserId, display_name: "Alice Wonder", avatar_url: "mxc://1/avatar" },
-                { user_id: "@bob:matrix.org", display_name: "Bob Wonder", avatar_url: "mxc://2/avatar" },
+                { user_id: "@bob:blackcandletech.com", display_name: "Bob Wonder", avatar_url: "mxc://2/avatar" },
             ],
             limited: false,
         });
@@ -485,8 +423,8 @@ describe("Spotlight Dialog", () => {
 
     it("don't sort the order of users sent by the server", async () => {
         const serverList = [
-            { user_id: "@user2:server", display_name: "User Beta", avatar_url: "mxc://2/avatar" },
-            { user_id: "@user1:server", display_name: "User Alpha", avatar_url: "mxc://1/avatar" },
+            { user_id: "@user2:blackcandletech.com", display_name: "User Beta", avatar_url: "mxc://2/avatar" },
+            { user_id: "@user1:blackcandletech.com", display_name: "User Alpha", avatar_url: "mxc://1/avatar" },
         ];
         vi.mocked(mockedClient.searchUserDirectory).mockResolvedValue({
             results: serverList,
@@ -505,6 +443,42 @@ describe("Spotlight Dialog", () => {
             expect(options[0]).toHaveTextContent("User Beta");
             expect(options[1]).toHaveTextContent("User Alpha");
         });
+    });
+
+    it("only discovers local people, including suggestions from joined rooms", async () => {
+        const foreignUserId = "@foreign:example.org";
+        const member = new RoomMember(testRoom.roomId, foreignUserId);
+        member.name = member.rawDisplayName = "Foreign person";
+        vi.mocked(testRoom.getJoinedMembers).mockReturnValue([member]);
+        vi.mocked(mockedClient.searchUserDirectory).mockResolvedValue({
+            results: [testPerson, { user_id: foreignUserId, display_name: "Foreign person" }],
+            limited: false,
+        });
+        render(<SpotlightDialog initialFilter={Filter.People} initialText="person" onFinished={() => null} />);
+        vi.advanceTimersByTime(200);
+        await flushPromisesWithFakeTimers();
+
+        await waitFor(() => expect(screen.getByText(testPerson.display_name!)).toBeInTheDocument());
+        expect(screen.queryByText("Foreign person")).not.toBeInTheDocument();
+    });
+
+    it.each(["@foreign:example.org", "@foreign:blackcandletech.com.evil", "@foreign:blackcandletech.com:8448"])(
+        "does not look up a foreign profile: %s",
+        async (userId) => {
+            render(<SpotlightDialog initialFilter={Filter.People} initialText={userId} onFinished={() => null} />);
+            vi.advanceTimersByTime(200);
+            await flushPromisesWithFakeTimers();
+            expect(mockedClient.getProfileInfo).not.toHaveBeenCalled();
+        },
+    );
+
+    it("looks up a local profile by full user ID", async () => {
+        render(
+            <SpotlightDialog initialFilter={Filter.People} initialText={testPerson.user_id} onFinished={() => null} />,
+        );
+        vi.advanceTimersByTime(200);
+        await flushPromisesWithFakeTimers();
+        expect(mockedClient.getProfileInfo).toHaveBeenCalledWith(testPerson.user_id);
     });
 
     it("should start a DM when clicking a person", async () => {
@@ -530,175 +504,25 @@ describe("Spotlight Dialog", () => {
         expect(startDmOnFirstMessage).toHaveBeenCalledWith(mockedClient, [new DirectoryMember(testPerson)]);
     });
 
-    it("should pass via of the server being explored when joining room from directory", async () => {
-        SdkConfig.put({
-            room_directory: {
-                servers: ["example.tld"],
-            },
-        });
-        localStorage.setItem("mx_last_room_directory_server", "example.tld");
+    it.each([
+        ["#room:blackcandletech.com", true],
+        ["#room:example.org", false],
+        ["#room:blackcandletech.com.evil", false],
+    ])("only offers local room aliases: %s", async (alias, local) => {
+        render(<SpotlightDialog initialText={alias} onFinished={() => null} />);
+        const option = screen.queryByRole("option", { name: `Join ${alias}` });
+        expect(!!option).toBe(local);
+    });
 
-        render(<SpotlightDialog initialFilter={Filter.PublicRooms} onFinished={() => null} />);
-
+    it("does not expose or query public directories", async () => {
+        render(<SpotlightDialog initialText="Room" onFinished={() => null} />);
         vi.advanceTimersByTime(200);
         await flushPromisesWithFakeTimers();
 
-        let options: NodeListOf<Element> | undefined;
-        await waitFor(() => {
-            const content = document.querySelector("#mx_SpotlightDialog_content")!;
-            options = content.querySelectorAll("li.mx_SpotlightDialog_option");
-            expect(options.length).toBe(1);
-            expect(options[0]!.innerHTML).toContain(testPublicRoom.name);
-        });
-
-        vi.mocked(defaultDispatcher.dispatch).mockClear();
-
-        fireEvent.click(options![0]!.querySelector("[role='button']")!);
-        expect(defaultDispatcher.dispatch).toHaveBeenCalledTimes(1);
-        expect(defaultDispatcher.dispatch).toHaveBeenCalledWith(
-            expect.objectContaining({
-                action: "view_room",
-                room_id: testPublicRoom.room_id,
-                via_servers: ["example.tld"],
-            }),
-        );
-    });
-
-    describe("nsfw public rooms filter", () => {
-        const nsfwNameRoom: IPublicRoomsChunkRoom = {
-            room_id: "@room1:matrix.org",
-            name: "Room 1 [NSFW]",
-            topic: undefined,
-            world_readable: false,
-            num_joined_members: 1,
-            guest_can_join: false,
-        };
-
-        const nsfwTopicRoom: IPublicRoomsChunkRoom = {
-            room_id: "@room2:matrix.org",
-            name: "Room 2",
-            topic: "A room with a topic that includes nsfw",
-            world_readable: false,
-            num_joined_members: 1,
-            guest_can_join: false,
-        };
-
-        const potatoRoom: IPublicRoomsChunkRoom = {
-            room_id: "@room3:matrix.org",
-            name: "Potato Room 3",
-            topic: "Room where we discuss potatoes",
-            world_readable: false,
-            num_joined_members: 1,
-            guest_can_join: false,
-        };
-
-        beforeEach(async () => {
-            mockedClient = mockClient({ rooms: [nsfwNameRoom, nsfwTopicRoom, potatoRoom], users: [testPerson] });
-            await SettingsStore.setValue("SpotlightSearch.showNsfwPublicRooms", null, SettingLevel.DEVICE, false);
-        });
-
-        it("does not display rooms with nsfw keywords in results when showNsfwPublicRooms is falsy", async () => {
-            render(<SpotlightDialog initialFilter={Filter.PublicRooms} onFinished={() => null} />);
-
-            // search is debounced
-            vi.advanceTimersByTime(200);
-            await flushPromisesWithFakeTimers();
-
-            await waitFor(() => {
-                expect(screen.getByText(potatoRoom.name!)).toBeInTheDocument();
-                expect(screen.queryByText(nsfwTopicRoom.name!)).not.toBeInTheDocument();
-                expect(screen.queryByText(nsfwNameRoom.name!)).not.toBeInTheDocument();
-            });
-        });
-
-        it("displays rooms with nsfw keywords in results when showNsfwPublicRooms is truthy", async () => {
-            await SettingsStore.setValue("SpotlightSearch.showNsfwPublicRooms", null, SettingLevel.DEVICE, true);
-            render(<SpotlightDialog initialFilter={Filter.PublicRooms} onFinished={() => null} />);
-
-            // search is debounced
-            vi.advanceTimersByTime(200);
-            await flushPromisesWithFakeTimers();
-
-            await waitFor(() => {
-                expect(screen.getByText(nsfwTopicRoom.name!)).toBeInTheDocument();
-                expect(screen.getByText(nsfwNameRoom.name!)).toBeInTheDocument();
-                expect(screen.getByText(potatoRoom.name!)).toBeInTheDocument();
-            });
-        });
-    });
-
-    it("should show error if /publicRooms API failed", async () => {
-        vi.mocked(mockedClient.publicRooms).mockRejectedValue(new ConnectionError("Failed to fetch"));
-        render(<SpotlightDialog initialFilter={Filter.PublicRooms} onFinished={() => null} />);
-
-        vi.advanceTimersByTime(200);
-        await flushPromisesWithFakeTimers();
-
-        await waitFor(() => expect(screen.getByText("Failed to query public rooms")).toBeInTheDocument());
-    });
-
-    describe("knock rooms", () => {
-        const knockRoom: IPublicRoomsChunkRoom = {
-            guest_can_join: false,
-            join_rule: JoinRule.Knock,
-            num_joined_members: 0,
-            room_id: "some-room-id",
-            world_readable: false,
-        };
-
-        const viewRoomParams = {
-            action: Action.ViewRoom,
-            metricsTrigger: "WebUnifiedSearch",
-            metricsViaKeyboard: false,
-            room_alias: undefined,
-            room_id: knockRoom.room_id,
-            should_peek: false,
-            via_servers: ["example.tld"],
-        };
-
-        beforeEach(() => (mockedClient = mockClient({ rooms: [knockRoom] })));
-
-        describe("when disabling feature", () => {
-            beforeEach(async () => {
-                await SettingsStore.setValue("feature_ask_to_join", null, SettingLevel.DEVICE, false);
-
-                render(<SpotlightDialog initialFilter={Filter.PublicRooms} onFinished={() => {}} />);
-
-                // search is debounced
-                vi.advanceTimersByTime(200);
-                await flushPromisesWithFakeTimers();
-
-                fireEvent.click(await screen.findByRole("button", { name: "View" }));
-            });
-
-            it("should not skip to auto join", async () => {
-                expect(defaultDispatcher.dispatch).toHaveBeenCalledWith({ ...viewRoomParams, auto_join: true });
-            });
-
-            it("should not prompt ask to join", async () => {
-                expect(defaultDispatcher.dispatch).not.toHaveBeenCalledWith({ action: Action.PromptAskToJoin });
-            });
-        });
-
-        describe("when enabling feature", () => {
-            beforeEach(async () => {
-                await SettingsStore.setValue("feature_ask_to_join", null, SettingLevel.DEVICE, true);
-                vi.spyOn(mockedClient, "getRoom").mockReturnValue(null);
-
-                render(<SpotlightDialog initialFilter={Filter.PublicRooms} onFinished={() => {}} />);
-
-                await waitFor(() => expect(screen.getByRole("button", { name: "Ask to join" })).toBeInTheDocument());
-                fireEvent.click(screen.getByRole("button", { name: "Ask to join" }));
-            });
-
-            it("should skip to auto join", async () => {
-                expect(defaultDispatcher.dispatch).toHaveBeenCalledWith({ ...viewRoomParams, auto_join: false });
-            });
-
-            it("should prompt ask to join", async () => {
-                expect(defaultDispatcher.dispatch).toHaveBeenCalledWith({ action: Action.PromptAskToJoin });
-            });
-        });
+        expect(screen.queryByText("Public rooms")).not.toBeInTheDocument();
+        expect(screen.queryByText("Public spaces")).not.toBeInTheDocument();
+        expect(mockedClient.publicRooms).not.toHaveBeenCalled();
+        expect(mockedClient.getThirdpartyProtocols).not.toHaveBeenCalled();
     });
 
     it("should allow jumping into message search", async () => {

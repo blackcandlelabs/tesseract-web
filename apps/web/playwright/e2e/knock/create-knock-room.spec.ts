@@ -10,7 +10,6 @@ import { rejectToast } from "@element-hq/element-web-playwright-common";
 
 import { test, expect } from "../../element-web-test";
 import { waitForRoom } from "../utils";
-import { Filter } from "../../pages/Spotlight";
 import { isDendrite } from "../../plugins/homeserver/dendrite";
 
 test.describe("Create Knock Room", () => {
@@ -64,14 +63,14 @@ test.describe("Create Knock Room", () => {
         });
     });
 
-    test("should create a public knock room", async ({ page, app, user }) => {
+    test("should not offer directory publication for a knock room", async ({ page, app, user }) => {
         await rejectToast(page, "Verify this device");
 
         const dialog = await app.openCreateRoomDialog();
         await dialog.getByRole("textbox", { name: "Name" }).fill("Cybersecurity");
         await dialog.getByRole("button", { name: "Room visibility" }).click();
         await dialog.getByRole("option", { name: "Ask to join" }).click();
-        await dialog.getByText("Make this room visible in the public room directory.").click();
+        await expect(dialog.getByText("Make this room visible in the public room directory.")).not.toBeAttached();
         await dialog.getByRole("button", { name: "Create room" }).click();
 
         await expect(page.locator(".mx_RoomHeader").getByText("Cybersecurity")).toBeVisible();
@@ -85,7 +84,6 @@ test.describe("Create Knock Room", () => {
         });
 
         const spotlightDialog = await app.openSpotlight();
-        await spotlightDialog.filter(Filter.PublicRooms);
         await spotlightDialog.search("Cyber");
         await expect(spotlightDialog.results.nth(0)).toContainText("Cybersecurity");
     });
